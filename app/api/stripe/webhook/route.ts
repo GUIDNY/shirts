@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { updateOrder } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/email";
-import type { OrderRecord } from "@/lib/types";
 import type Stripe from "stripe";
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
 export async function POST(request: Request) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    return NextResponse.json({ error: "Stripe webhook is not configured" }, { status: 500 });
+  }
+
   const signature = request.headers.get("stripe-signature");
   const rawBody = await request.text();
 
@@ -30,16 +32,14 @@ export async function POST(request: Request) {
     const orderId = session.metadata?.orderId || session.client_reference_id;
 
     if (orderId) {
-      const { data: order } = await getSupabaseAdmin()
-        .from("orders")
-        .update({ payment_status: "paid", order_status: "paid" })
-        .eq("id", orderId)
-        .select()
-        .single();
+      const order = await updateOrder(orderId, {
+        payment_status: "paid",
+        order_status: "paid",
+      });
 
       if (order) {
         try {
-          await sendOrderConfirmationEmail(order as OrderRecord);
+          await sendOrderConfirmationEmail(order);
         } catch (err) {
           console.error("Failed to send order confirmation email:", err);
         }

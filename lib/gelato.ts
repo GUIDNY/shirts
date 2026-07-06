@@ -1,5 +1,4 @@
 import "server-only";
-import { getSupabaseAdmin, DESIGNS_BUCKET } from "./supabase/server";
 import type { OrderRecord, ProductType, ShirtColor, Size } from "./types";
 
 const GELATO_API_BASE = "https://order.gelatoapis.com";
@@ -56,18 +55,6 @@ export function getProductUid(productType: ProductType, color: ShirtColor, size:
   return `apparel_product_gca_t-shirt_gsc_crewneck_gcu_${cut}_gqa_classic_gsi_${gelatoSize}_gco_${gelatoColor}_gpr_4-0`;
 }
 
-/** Creates a short-lived signed URL so Gelato can fetch the private design file. */
-async function getSignedDesignUrl(imagePath: string): Promise<string> {
-  const { data, error } = await getSupabaseAdmin().storage
-    .from(DESIGNS_BUCKET)
-    .createSignedUrl(imagePath, 60 * 60 * 24); // 24h, enough for Gelato to fetch it
-
-  if (error || !data?.signedUrl) {
-    throw new Error(`Failed to create signed URL for design file: ${error?.message}`);
-  }
-  return data.signedUrl;
-}
-
 export interface GelatoOrderResponse {
   id: string;
   orderReferenceId: string;
@@ -77,24 +64,30 @@ export interface GelatoOrderResponse {
 }
 
 /**
- * Creates an order on Gelato for a paid, internal order.
- * Only call this AFTER payment has been confirmed (paymentStatus === "paid").
+ * Creates an order on Gelato.
+ *
+ * By default creates a DRAFT: it appears in the Gelato dashboard but is
+ * never charged or sent to production until explicitly converted. Pass
+ * orderType "order" only for confirmed production orders.
  *
  * Gelato Order API v4 reference: https://dashboard.gelato.com/docs/orders/v4/create/
  */
-export async function createGelatoOrder(order: OrderRecord): Promise<GelatoOrderResponse> {
+export async function createGelatoOrder(
+  order: OrderRecord,
+  orderType: "draft" | "order" = "draft"
+): Promise<GelatoOrderResponse> {
   if (!GELATO_API_KEY) {
     throw new Error("GELATO_API_KEY is not set in environment variables.");
   }
-  if (order.payment_status !== "paid") {
-    throw new Error("Refusing to send an unpaid order to Gelato.");
+  if (orderType === "order" && order.payment_status !== "paid") {
+    throw new Error("Refusing to send an unpaid order to Gelato production.");
   }
 
   const productUid = getProductUid(order.product_type, order.color, order.size);
-  const designFileUrl = await getSignedDesignUrl(order.image_path);
+  const designFileUrl = order.image_url;
 
   const body = {
-    orderType: "order",
+    orderType,
     orderReferenceId: order.id,
     customerReferenceId: order.email,
     currency: "ILS",
@@ -139,6 +132,33 @@ export async function createGelatoOrder(order: OrderRecord): Promise<GelatoOrder
     throw new Error(
       `Gelato order creation failed (${res.status}): ${JSON.stringify(data)}`
     );
+  }
+
+  return data as GelatoOrderResponse;
+}
+
+/**
+ * Converts an existing Gelato draft into a real production order.
+ * This is the point of no return — Gelato will charge and print.
+ */
+export async function convertGelatoDraftToOrder(gelatoOrderId: string): Promise<GelatoOrderResponse> {
+  if (!GELATO_API_KEY) {
+    throw new Error("GELATO_API_KEY is not set in environment variables.");
+  }
+
+  const res = await fetch(`${GELATO_API_BASE}/v4/orders/${gelatoOrderId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": GELATO_API_KEY,
+    },
+    body: JSON.stringify({ orderType: "order" }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(`Gelato draft conversion failed (${res.status}): ${JSON.stringify(data)}`);
   }
 
   return data as GelatoOrderResponse;

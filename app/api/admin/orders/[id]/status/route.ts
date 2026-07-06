@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from "@/lib/auth";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { updateOrder } from "@/lib/db";
 import type { OrderStatus } from "@/lib/types";
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -27,11 +27,13 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/admin/orde
     return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
   }
 
-  const { error } = await getSupabaseAdmin().from("orders").update({ order_status: status }).eq("id", id);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    await updateOrder(id, { order_status: status });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "עדכון נכשל" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ ok: true });
 }

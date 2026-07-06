@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSupabaseAdmin, DESIGNS_BUCKET, MOCKUPS_BUCKET } from "@/lib/supabase/server";
-import { COLOR_LABELS, PRODUCT_LABELS, type OrderRecord } from "@/lib/types";
+import { getOrderById } from "@/lib/db";
+import { COLOR_LABELS, PRODUCT_LABELS } from "@/lib/types";
 import StatusSelect from "@/components/admin/StatusSelect";
 import SendToGelatoButton from "@/components/admin/SendToGelatoButton";
 
@@ -14,19 +14,13 @@ export default async function AdminOrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
-  const { data: order } = await getSupabaseAdmin()
-    .from("orders")
-    .select("*")
-    .eq("id", id)
-    .single<OrderRecord>();
-
+  const order = await getOrderById(id);
   if (!order) notFound();
 
-  const { data: mockupUrlData } = getSupabaseAdmin().storage.from(MOCKUPS_BUCKET).getPublicUrl(order.mockup_path);
-  const { data: signedDesignData } = await getSupabaseAdmin().storage
-    .from(DESIGNS_BUCKET)
-    .createSignedUrl(order.image_path, 60 * 60);
+  const draftCreated = Boolean(order.gelato_order_id);
+  const inProduction = ["sent_to_gelato", "printing", "shipped", "completed"].includes(
+    order.order_status
+  );
 
   return (
     <div>
@@ -75,43 +69,50 @@ export default async function AdminOrderDetailPage({
             <dd>{order.quantity}</dd>
             <dt className="text-neutral-500">מחיר</dt>
             <dd>{order.price} ₪</dd>
+            <dt className="text-neutral-500">תשלום</dt>
+            <dd>
+              {order.payment_status === "paid" ? "שולם" : order.payment_status === "failed" ? "נכשל" : "ממתין"}
+            </dd>
           </dl>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5">
           <h2 className="font-semibold mb-3">תצוגה מקדימה (Mockup)</h2>
-          {mockupUrlData?.publicUrl && (
-            <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden bg-neutral-50">
-              <Image src={mockupUrlData.publicUrl} alt="Mockup" fill className="object-contain" unoptimized />
-            </div>
-          )}
+          <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden bg-neutral-50">
+            <Image src={order.mockup_url} alt="Mockup" fill className="object-contain" unoptimized />
+          </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5">
           <h2 className="font-semibold mb-3">קובץ עיצוב מקורי</h2>
-          {signedDesignData?.signedUrl ? (
-            <a
-              href={signedDesignData.signedUrl}
-              download
-              className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
-            >
-              הורדת קובץ העיצוב
-            </a>
-          ) : (
-            <p className="text-sm text-neutral-500">לא ניתן ליצור קישור להורדה</p>
-          )}
+          <a
+            href={order.image_url}
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
+          >
+            הורדת קובץ העיצוב
+          </a>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5 md:col-span-2">
           <h2 className="font-semibold mb-3">Gelato</h2>
-          {order.gelato_order_id ? (
-            <p className="text-sm text-neutral-700">
-              נשלח ל-Gelato · מזהה הזמנה: <span className="font-mono">{order.gelato_order_id}</span>
-            </p>
-          ) : order.payment_status === "paid" ? (
-            <SendToGelatoButton orderId={order.id} />
+          {draftCreated ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-neutral-700">
+                {inProduction ? "נשלח לייצור" : "דראפט ממתין בחשבון Gelato"} · מזהה:{" "}
+                <span className="font-mono">{order.gelato_order_id}</span>
+              </p>
+              {!inProduction && (
+                <SendToGelatoButton orderId={order.id} mode="convert" isPaid={order.payment_status === "paid"} />
+              )}
+            </div>
           ) : (
-            <p className="text-sm text-neutral-500">ניתן לשלוח ל-Gelato רק לאחר שהתשלום אושר</p>
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-neutral-500">הדראפט לא נוצר אוטומטית — אפשר לנסות שוב:</p>
+              <SendToGelatoButton orderId={order.id} mode="create_draft" isPaid={order.payment_status === "paid"} />
+            </div>
           )}
         </div>
       </div>

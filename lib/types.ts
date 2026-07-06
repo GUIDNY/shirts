@@ -56,9 +56,9 @@ export interface CartItem {
   color: ShirtColor;
   size: Size;
   quantity: number;
-  imagePath: string;
-  mockupPath: string;
+  /** Public Blob URL of the original design file (Gelato fetches this). */
   imageUrl: string;
+  /** Public Blob URL of the rendered shirt mockup. */
   mockupUrl: string;
   transform: DesignTransform;
 }
@@ -86,8 +86,8 @@ export interface OrderRecord {
   size: Size;
   color: ShirtColor;
   quantity: number;
-  image_path: string;
-  mockup_path: string;
+  image_url: string;
+  mockup_url: string;
   price: number;
   payment_status: PaymentStatus;
   order_status: OrderStatus;

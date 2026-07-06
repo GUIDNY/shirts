@@ -1,8 +1,8 @@
 # חולצה אישית — הדפסה על חולצות בעיצוב אישי
 
 אתר הזמנות לחולצות מודפסות לפי דרישה. Next.js 16 (App Router) + TypeScript + Tailwind
-CSS v4, Supabase (DB + Storage), Stripe Checkout, ו-Konva לעורך העיצוב האינטראקטיבי.
-מוכן לחיבור ל-Gelato API להדפסה ומשלוח אוטומטיים.
+CSS v4, Neon Postgres + Vercel Blob (דרך Vercel Marketplace), Stripe Checkout (אופציונלי),
+ו-Konva לעורך העיצוב האינטראקטיבי. מחובר ל-Gelato API — כל הזמנה יוצרת דראפט אוטומטית.
 
 ## 1. מבנה תיקיות
 
@@ -20,21 +20,21 @@ tshirt-print-shop/
 │  │  ├─ page.tsx                     טבלת הזמנות
 │  │  └─ orders/[id]/page.tsx         פרטי הזמנה + שליחה ל-Gelato
 │  └─ api/
-│     ├─ upload/route.ts              העלאת קובץ עיצוב + mockup ל-Supabase Storage
-│     ├─ checkout/route.ts            יצירת הזמנה (pending) + Stripe Checkout Session
+│     ├─ upload/route.ts              העלאת קובץ עיצוב + mockup ל-Vercel Blob
+│     ├─ checkout/route.ts            יצירת הזמנה + דראפט ב-Gelato (+ Stripe אם מוגדר)
 │     ├─ stripe/webhook/route.ts      אישור תשלום מ-Stripe → מסמן הזמנה כ"שולם"
-│     ├─ gelato/send/route.ts         (אדמין) שליחת הזמנה משולמת ל-Gelato
+│     ├─ gelato/send/route.ts         (אדמין) יצירת דראפט חוזרת / אישור לייצור
 │     ├─ gelato/webhook/route.ts      קליטת עדכוני סטטוס מ-Gelato
 │     └─ admin/login|logout, admin/orders/[id]/status   ניהול הרשאות וסטטוס
 ├─ components/                        Header, Footer, WhatsAppButton, CartProvider,
 │                                      ShirtSvg, ShirtDesignerCanvas (Konva), admin/*
 ├─ lib/
 │  ├─ types.ts, pricing.ts, shirtSvg.ts
-│  ├─ supabase/client.ts              קליינט ציבורי (anon key) — לדפדפן
-│  ├─ supabase/server.ts              קליינט שרת (service role key) — שרת בלבד
+│  ├─ db.ts                           Neon Postgres — הזמנות (שרת בלבד)
+│  ├─ storage.ts                      Vercel Blob — קבצי עיצוב ו-mockups
 │  ├─ stripe.ts, email.ts, auth.ts
-│  └─ gelato.ts                       שירות Gelato — createGelatoOrder()
-├─ supabase/schema.sql                טבלת orders + buckets + RLS
+│  └─ gelato.ts                       Gelato — createGelatoOrder() + convertGelatoDraftToOrder()
+├─ db/schema.sql + scripts/migrate.mjs   סכימת orders (npm run db:migrate)
 ├─ proxy.ts                           הגנת /admin (שם חדש ל-middleware ב-Next.js 16)
 └─ .env.example
 ```
@@ -44,32 +44,37 @@ tshirt-print-shop/
 1. **`/design`** — הלקוח בוחר סוג מוצר / צבע / מידה, מעלה תמונה, וממקם אותה על
    קנבס Konva (גרירה להזזה, ידיות בפינות להגדלה/הקטנה/סיבוב). בלחיצה על
    "המשך להזמנה", התמונה המקורית ותמונת ה-mockup המורכבת (`stage.toDataURL()`)
-   נשלחות ל-`/api/upload` ומאוחסנות ב-Supabase Storage.
+   נשלחות ל-`/api/upload` ומאוחסנות ב-**Vercel Blob** (URL ציבורי עם סיומת
+   אקראית — ככה Gelato יכול למשוך את הקובץ ישירות).
 2. **`/cart`** ו-**`/checkout`** — עריכת כמות ופרטי משלוח (נשמר ב-localStorage
    דרך `CartProvider`).
-3. בלחיצה על "המשך לתשלום", `/api/checkout` יוצר **שורת הזמנה ב-DB עם
-   `payment_status = pending`**, ואז יוצר Stripe Checkout Session ומפנה אליו.
-   המחיר מחושב מחדש בצד השרת (`lib/pricing.ts`) — לעולם לא נסמכים על מחיר
-   שמגיע מהדפדפן.
+3. בלחיצה על "המשך לתשלום", `/api/checkout`:
+   - יוצר שורת הזמנה ב-**Neon Postgres** (המחיר מחושב מחדש בצד השרת —
+     לעולם לא נסמכים על מחיר שמגיע מהדפדפן);
+   - יוצר מיד **דראפט ב-Gelato** (`orderType: "draft"`) ושומר את
+     `gelato_order_id` — הדראפט מופיע ב-Gelato Dashboard אבל לא מחויב
+     ולא מודפס עד אישור;
+   - אם `STRIPE_SECRET_KEY` מוגדר — ממשיך ל-Stripe Checkout; אחרת ההזמנה
+     מסתיימת מיד (מצב ללא-תשלום עד שמחברים Stripe).
 4. **`/api/stripe/webhook`** — כש-Stripe שולח `checkout.session.completed`,
    ההזמנה מסומנת כ-`paid`, ונשלח מייל אישור (Resend).
-5. **`/thank-you/[orderId]`** — מציג את מספר ההזמנה. אם ה-webhook עדיין לא
-   הגיע (יכול לקרות בסביבת פיתוח בלי `stripe listen`), העמוד בודק ישירות מול
-   Stripe כגיבוי.
-6. **הזמנה ל-Gelato נשלחת רק ידנית** מתוך `/admin/orders/[id]` בלחיצה על
-   "שלח ל-Gelato" — אף פעם לא אוטומטית, ורק אם `payment_status === "paid"`.
+5. **אישור לייצור הוא תמיד ידני**: בעמוד `/admin/orders/[id]` יש כפתור
+   "אשר לייצור והדפסה" שממיר את הדראפט להזמנה אמיתית ב-Gelato (עם אישור
+   נוסף בדפדפן, ואזהרה אם ההזמנה לא שולמה).
 
-## 3. הגדרת Supabase
+## 3. מסד נתונים ואחסון (Vercel)
 
-1. צרו פרויקט חדש ב-[supabase.com](https://supabase.com).
-2. פתחו את ה-SQL Editor והריצו את הקובץ `supabase/schema.sql` — זה יוצר את
-   טבלת `orders`, את ה-bucket הפרטי `designs` ואת ה-bucket הציבורי `mockups`.
-3. מ-Project Settings > API, העתיקו את `URL`, `anon public key` ו-
-   `service_role key` ל-`.env.local`.
+הוקם ב-2026-07-06 דרך Vercel Marketplace, מחובר לפרויקט `shirts`:
 
-**חשוב על אבטחה**: bucket `designs` (קבצי העיצוב המקוריים) נשאר **פרטי**.
-כל גישה אליו (גם בעמוד הניהול) מתבצעת דרך Signed URL שנוצר בזמן אמת בשרת
-(`createSignedUrl`), ולא דרך URL ציבורי קבוע.
+- **Neon Postgres** (`vercel install neon`) — טבלת `orders`. הסכימה ב-
+  `db/schema.sql`; להרצה מחדש: `npm run db:migrate` (קורא `DATABASE_URL`
+  מ-`.env.local`).
+- **Vercel Blob** (store בשם `shirts-files`, public) — קבצי עיצוב ו-mockups.
+  ה-URLs ציבוריים אך עם סיומת אקראית בלתי-ניתנת-לניחוש, מה שמאפשר ל-Gelato
+  למשוך את קובץ ההדפסה ישירות בלי Signed URLs.
+
+כדי למשוך את משתני הסביבה לפיתוח מקומי: `vercel env pull .env.local`
+(ואז להוסיף חזרה את הסודות שאינם ב-Vercel, אם חסרים).
 
 ## 4. משתני סביבה (`.env.local`)
 
@@ -77,9 +82,9 @@ tshirt-print-shop/
 
 | משתנה | היכן משתמשים | הערה |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | דפדפן + שרת | ציבורי, מותר בצד לקוח |
-| `SUPABASE_SERVICE_ROLE_KEY` | שרת בלבד | **סודי**, לעולם לא לדפדפן |
-| `STRIPE_SECRET_KEY` | שרת בלבד | **סודי** |
+| `DATABASE_URL` | שרת בלבד | **סודי** — Neon Postgres (נוצר ע"י Vercel) |
+| `BLOB_READ_WRITE_TOKEN` | שרת בלבד | **סודי** — Vercel Blob (נוצר ע"י Vercel) |
+| `STRIPE_SECRET_KEY` | שרת בלבד | **סודי**; אם ריק — האתר במצב ללא-תשלום |
 | `STRIPE_WEBHOOK_SECRET` | שרת בלבד | מ-`stripe listen` בפיתוח, מה-Dashboard בפרודקשן |
 | `GELATO_API_KEY` | שרת בלבד | **סודי** — ר' סעיף 5 למטה |
 | `ADMIN_PASSWORD` | שרת בלבד | סיסמת הכניסה לעמוד `/admin` |
@@ -106,24 +111,16 @@ npm run dev
 
 האתר יעלה על http://localhost:3000 (או פורט חלופי אם 3000 תפוס).
 
-## 7. בדיקת הזמנה בדמו — בלי לשלוח באמת ל-Gelato
+## 7. בדיקת הזמנה — למה זה בטוח
 
-זה כבר מובנה בעיצוב המערכת:
-
-- **Gelato אף פעם לא נקרא אוטומטית.** גם אחרי תשלום מוצלח, ההזמנה רק
-  מסומנת `paid` — אין קריאה ל-Gelato עד שלוחצים ידנית על "שלח ל-Gelato"
-  בעמוד `/admin/orders/[id]`.
-- כדי לבדוק את כל הזרימה (עיצוב → סל → תשלום → אישור) בלי לגעת ב-Gelato כלל:
-  1. הריצו `stripe listen --forward-to localhost:3000/api/stripe/webhook`
-     (צריך [Stripe CLI](https://docs.stripe.com/stripe-cli)) כדי לקבל את
-     `STRIPE_WEBHOOK_SECRET` ולוודא שה-webhook מגיע.
-  2. בצעו הזמנה מלאה באתר, ובתשלום ב-Stripe Checkout השתמשו בכרטיס בדיקה
-     `4242 4242 4242 4242`, כל תאריך תוקף עתידי, כל CVC.
-  3. תגיעו ל-`/thank-you/...` עם "ההזמנה התקבלה בהצלחה", ותוכלו לראות אותה
-     ב-`/admin` עם `payment_status = paid`.
-  4. **אל תלחצו** על "שלח ל-Gelato" אלא אם `GELATO_API_KEY` ומיפוי המוצרים
-     (סעיף הבא) מוגדרים באמת — עד אז הכפתור יחזיר שגיאה ברורה במקום לשלוח
-     נתונים לא תקינים.
+- כל הזמנה באתר יוצרת **דראפט בלבד** ב-Gelato: מופיע ב-Dashboard, לא מחויב
+  ולא נשלח לייצור. אפשר להזמין באתר בחופשיות לצורך בדיקות.
+- הייצור מתחיל רק כשמאשרים ידנית ב-`/admin/orders/[id]` ("אשר לייצור
+  והדפסה"), עם דיאלוג אישור ואזהרה אם ההזמנה לא שולמה.
+- דראפטים מיותרים אפשר למחוק ב-Gelato Dashboard.
+- לבדיקת תשלום כשמחברים Stripe: כרטיס בדיקה `4242 4242 4242 4242`, כל
+  תוקף עתידי, כל CVC, עם `stripe listen --forward-to
+  localhost:3000/api/stripe/webhook`.
 
 ## 8. סטטוס חיבור Gelato
 

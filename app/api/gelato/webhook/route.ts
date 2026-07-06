@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { updateOrder, updateOrderByGelatoId } from "@/lib/db";
 import type { GelatoWebhookPayload } from "@/lib/gelato";
 import type { OrderStatus } from "@/lib/types";
 
@@ -39,17 +39,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing order identifier" }, { status: 400 });
   }
 
-  const query = getSupabaseAdmin().from("orders").update(
-    nextStatus ? { order_status: nextStatus } : {}
-  );
-
-  const { error } = orderReferenceId
-    ? await query.eq("id", orderReferenceId)
-    : await query.eq("gelato_order_id", gelatoOrderId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!nextStatus) {
+    return NextResponse.json({ received: true, ignored: payload.fulfillmentStatus });
   }
 
-  return NextResponse.json({ received: true });
+  try {
+    if (orderReferenceId) {
+      await updateOrder(orderReferenceId, { order_status: nextStatus });
+    } else {
+      await updateOrderByGelatoId(gelatoOrderId, { order_status: nextStatus });
+    }
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "update failed" },
+      { status: 500 }
+    );
+  }
 }

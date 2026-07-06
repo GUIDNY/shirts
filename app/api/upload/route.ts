@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { getSupabaseAdmin, DESIGNS_BUCKET, MOCKUPS_BUCKET } from "@/lib/supabase/server";
+import { uploadPublicFile } from "@/lib/storage";
 
 const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg"];
@@ -23,33 +23,19 @@ export async function POST(request: Request) {
   }
 
   const designExt = design.type === "image/png" ? "png" : "jpg";
-  const designPath = `${uuidv4()}.${designExt}`;
-  const mockupPath = `${uuidv4()}.png`;
+  const id = uuidv4();
 
-  const designBuffer = Buffer.from(await design.arrayBuffer());
-  const mockupBuffer = Buffer.from(await mockup.arrayBuffer());
+  try {
+    const [imageUrl, mockupUrl] = await Promise.all([
+      uploadPublicFile(`designs/${id}.${designExt}`, design, design.type),
+      uploadPublicFile(`mockups/${id}.png`, mockup, "image/png"),
+    ]);
 
-  const { error: designError } = await getSupabaseAdmin().storage
-    .from(DESIGNS_BUCKET)
-    .upload(designPath, designBuffer, { contentType: design.type, upsert: false });
-
-  if (designError) {
-    return NextResponse.json({ error: `העלאת קובץ העיצוב נכשלה: ${designError.message}` }, { status: 500 });
+    return NextResponse.json({ imageUrl, mockupUrl });
+  } catch (err) {
+    return NextResponse.json(
+      { error: `העלאת הקבצים נכשלה: ${err instanceof Error ? err.message : "שגיאה לא ידועה"}` },
+      { status: 500 }
+    );
   }
-
-  const { error: mockupError } = await getSupabaseAdmin().storage
-    .from(MOCKUPS_BUCKET)
-    .upload(mockupPath, mockupBuffer, { contentType: "image/png", upsert: false });
-
-  if (mockupError) {
-    return NextResponse.json({ error: `העלאת תצוגה מקדימה נכשלה: ${mockupError.message}` }, { status: 500 });
-  }
-
-  const { data: publicUrlData } = getSupabaseAdmin().storage.from(MOCKUPS_BUCKET).getPublicUrl(mockupPath);
-
-  return NextResponse.json({
-    imagePath: designPath,
-    mockupPath,
-    mockupUrl: publicUrlData.publicUrl,
-  });
 }

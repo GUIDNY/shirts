@@ -95,9 +95,7 @@ export default function DesignPage() {
         color,
         size,
         quantity,
-        imagePath: data.imagePath,
-        mockupPath: data.mockupPath,
-        imageUrl,
+        imageUrl: data.imageUrl,
         mockupUrl: data.mockupUrl,
         transform: transform as DesignTransform,
       });

@@ -57,13 +57,19 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
 
-      if (!res.ok || !data.url) {
-        setError(data.error || "יצירת התשלום נכשלה, נסו שוב");
+      if (!res.ok || (!data.url && !data.orderId)) {
+        setError(data.error || "יצירת ההזמנה נכשלה, נסו שוב");
         setSubmitting(false);
         return;
       }
 
-      window.location.href = data.url;
+      if (data.url) {
+        // Stripe hosted checkout
+        window.location.href = data.url;
+      } else {
+        // no-payment mode: order created (incl. Gelato draft) — go to thank-you
+        router.push(`/thank-you/${data.orderId}`);
+      }
     } catch {
       setError("משהו השתבש, נסו שוב");
       setSubmitting(false);

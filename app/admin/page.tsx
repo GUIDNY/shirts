@@ -1,22 +1,18 @@
 import Link from "next/link";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { COLOR_LABELS, PRODUCT_LABELS, type OrderRecord } from "@/lib/types";
+import { listOrders } from "@/lib/db";
+import { COLOR_LABELS, PRODUCT_LABELS } from "@/lib/types";
 import OrderStatusBadge from "@/components/admin/OrderStatusBadge";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
-  const { data: orders } = await getSupabaseAdmin()
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .returns<OrderRecord[]>();
+  const orders = await listOrders();
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">הזמנות ({orders?.length ?? 0})</h1>
+      <h1 className="text-2xl font-bold mb-6">הזמנות ({orders.length})</h1>
 
-      {!orders || orders.length === 0 ? (
+      {orders.length === 0 ? (
         <p className="text-neutral-500">אין הזמנות עדיין.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
@@ -29,6 +25,7 @@ export default async function AdminOrdersPage() {
                 <th className="px-4 py-3 font-medium">כמות</th>
                 <th className="px-4 py-3 font-medium">מחיר</th>
                 <th className="px-4 py-3 font-medium">תשלום</th>
+                <th className="px-4 py-3 font-medium">Gelato</th>
                 <th className="px-4 py-3 font-medium">סטטוס</th>
                 <th className="px-4 py-3 font-medium">תאריך</th>
                 <th className="px-4 py-3 font-medium"></th>
@@ -51,6 +48,13 @@ export default async function AdminOrdersPage() {
                       <span className="text-red-700 font-medium">נכשל</span>
                     ) : (
                       <span className="text-neutral-500">ממתין</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {order.gelato_order_id ? (
+                      <span className="text-green-700">✓ דראפט</span>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">

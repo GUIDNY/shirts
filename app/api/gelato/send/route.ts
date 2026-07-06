@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from "@/lib/auth";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { createGelatoOrder } from "@/lib/gelato";
-import type { OrderRecord } from "@/lib/types";
+import { getOrderById, updateOrder } from "@/lib/db";
+import { convertGelatoDraftToOrder, createGelatoOrder } from "@/lib/gelato";
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -12,41 +11,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { orderId } = await request.json();
-  if (!orderId) {
-    return NextResponse.json({ error: "חסר מזהה הזמנה" }, { status: 400 });
+  const { orderId, action } = await request.json();
+  if (!orderId || !["create_draft", "convert"].includes(action)) {
+    return NextResponse.json({ error: "בקשה לא תקינה" }, { status: 400 });
   }
 
-  const { data: order, error: fetchError } = await getSupabaseAdmin()
-    .from("orders")
-    .select("*")
-    .eq("id", orderId)
-    .single<OrderRecord>();
-
-  if (fetchError || !order) {
+  const order = await getOrderById(orderId);
+  if (!order) {
     return NextResponse.json({ error: "ההזמנה לא נמצאה" }, { status: 404 });
   }
 
-  if (order.payment_status !== "paid") {
-    return NextResponse.json({ error: "לא ניתן לשלוח הזמנה שלא שולמה" }, { status: 400 });
-  }
-
-  if (order.gelato_order_id) {
-    return NextResponse.json({ error: "ההזמנה כבר נשלחה ל-Gelato" }, { status: 400 });
-  }
-
   try {
-    const gelatoOrder = await createGelatoOrder(order);
+    if (action === "create_draft") {
+      if (order.gelato_order_id) {
+        return NextResponse.json({ error: "דראפט כבר קיים להזמנה זו" }, { status: 400 });
+      }
+      const draft = await createGelatoOrder(order, "draft");
+      await updateOrder(orderId, { gelato_order_id: draft.id });
+      return NextResponse.json({ ok: true, gelatoOrderId: draft.id });
+    }
 
-    await getSupabaseAdmin()
-      .from("orders")
-      .update({ gelato_order_id: gelatoOrder.id, order_status: "sent_to_gelato" })
-      .eq("id", orderId);
-
-    return NextResponse.json({ ok: true, gelatoOrderId: gelatoOrder.id });
+    // convert draft → production order
+    if (!order.gelato_order_id) {
+      return NextResponse.json({ error: "אין דראפט להזמנה זו — צרו דראפט קודם" }, { status: 400 });
+    }
+    await convertGelatoDraftToOrder(order.gelato_order_id);
+    await updateOrder(orderId, { order_status: "sent_to_gelato" });
+    return NextResponse.json({ ok: true, gelatoOrderId: order.gelato_order_id });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "שליחה ל-Gelato נכשלה" },
+      { error: err instanceof Error ? err.message : "הפעולה נכשלה" },
       { status: 500 }
     );
   }
