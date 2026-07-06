@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { COLOR_LABELS, PRODUCT_LABELS, type OrderRecord } from "@/lib/types";
 import OrderStatusBadge from "@/components/admin/OrderStatusBadge";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
-  const { data: orders } = await supabaseAdmin
+  const { data: orders } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false })

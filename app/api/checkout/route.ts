@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getStripe } from "@/lib/stripe";
 import { calculatePrice } from "@/lib/pricing";
 import {
   COLOR_LABELS,
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   const price = calculatePrice(item.quantity);
 
-  const { data: order, error: insertError } = await supabaseAdmin
+  const { data: order, error: insertError } = await getSupabaseAdmin()
     .from("orders")
     .insert({
       customer_name: customer.customerName,
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   } · מידה ${item.size} · כמות ${item.quantity}`;
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       client_reference_id: order.id,
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
       cancel_url: `${origin}/checkout`,
     });
 
-    await supabaseAdmin.from("orders").update({ stripe_session_id: session.id }).eq("id", order.id);
+    await getSupabaseAdmin().from("orders").update({ stripe_session_id: session.id }).eq("id", order.id);
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

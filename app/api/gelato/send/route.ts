@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { createGelatoOrder } from "@/lib/gelato";
 import type { OrderRecord } from "@/lib/types";
 
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "חסר מזהה הזמנה" }, { status: 400 });
   }
 
-  const { data: order, error: fetchError } = await supabaseAdmin
+  const { data: order, error: fetchError } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .eq("id", orderId)
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   try {
     const gelatoOrder = await createGelatoOrder(order);
 
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from("orders")
       .update({ gelato_order_id: gelatoOrder.id, order_status: "sent_to_gelato" })
       .eq("id", orderId);

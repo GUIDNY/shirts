@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getStripe } from "@/lib/stripe";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import type { OrderRecord } from "@/lib/types";
 import type Stripe from "stripe";
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    event = getStripe().webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (err) {
     return NextResponse.json(
       { error: `Webhook signature verification failed: ${err instanceof Error ? err.message : err}` },
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const orderId = session.metadata?.orderId || session.client_reference_id;
 
     if (orderId) {
-      const { data: order } = await supabaseAdmin
+      const { data: order } = await getSupabaseAdmin()
         .from("orders")
         .update({ payment_status: "paid", order_status: "paid" })
         .eq("id", orderId)

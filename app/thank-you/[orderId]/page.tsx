@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getStripe } from "@/lib/stripe";
 import type { OrderRecord } from "@/lib/types";
 import ClearCartOnSuccess from "@/components/ClearCartOnSuccess";
 
@@ -17,7 +17,7 @@ export default async function ThankYouPage({
   const { orderId } = await params;
   const { session_id } = await searchParams;
 
-  const { data: order } = await supabaseAdmin
+  const { data: order } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .eq("id", orderId)
@@ -31,9 +31,9 @@ export default async function ThankYouPage({
   // customer is redirected back from Checkout.
   if (confirmedOrder.payment_status !== "paid" && session_id) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(session_id);
+      const session = await getStripe().checkout.sessions.retrieve(session_id);
       if (session.payment_status === "paid") {
-        const { data: updated } = await supabaseAdmin
+        const { data: updated } = await getSupabaseAdmin()
           .from("orders")
           .update({ payment_status: "paid", order_status: "paid" })
           .eq("id", orderId)

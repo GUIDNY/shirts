@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { supabaseAdmin, DESIGNS_BUCKET, MOCKUPS_BUCKET } from "@/lib/supabase/server";
+import { getSupabaseAdmin, DESIGNS_BUCKET, MOCKUPS_BUCKET } from "@/lib/supabase/server";
 import { COLOR_LABELS, PRODUCT_LABELS, type OrderRecord } from "@/lib/types";
 import StatusSelect from "@/components/admin/StatusSelect";
 import SendToGelatoButton from "@/components/admin/SendToGelatoButton";
@@ -15,7 +15,7 @@ export default async function AdminOrderDetailPage({
 }) {
   const { id } = await params;
 
-  const { data: order } = await supabaseAdmin
+  const { data: order } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .eq("id", id)
@@ -23,8 +23,8 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
-  const { data: mockupUrlData } = supabaseAdmin.storage.from(MOCKUPS_BUCKET).getPublicUrl(order.mockup_path);
-  const { data: signedDesignData } = await supabaseAdmin.storage
+  const { data: mockupUrlData } = getSupabaseAdmin().storage.from(MOCKUPS_BUCKET).getPublicUrl(order.mockup_path);
+  const { data: signedDesignData } = await getSupabaseAdmin().storage
     .from(DESIGNS_BUCKET)
     .createSignedUrl(order.image_path, 60 * 60);
 

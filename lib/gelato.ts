@@ -1,5 +1,5 @@
 import "server-only";
-import { supabaseAdmin, DESIGNS_BUCKET } from "./supabase/server";
+import { getSupabaseAdmin, DESIGNS_BUCKET } from "./supabase/server";
 import type { OrderRecord, ProductType, ShirtColor, Size } from "./types";
 
 const GELATO_API_BASE = "https://order.gelatoapis.com";
@@ -58,7 +58,7 @@ export function getProductUid(productType: ProductType, color: ShirtColor, size:
 
 /** Creates a short-lived signed URL so Gelato can fetch the private design file. */
 async function getSignedDesignUrl(imagePath: string): Promise<string> {
-  const { data, error } = await supabaseAdmin.storage
+  const { data, error } = await getSupabaseAdmin().storage
     .from(DESIGNS_BUCKET)
     .createSignedUrl(imagePath, 60 * 60 * 24); // 24h, enough for Gelato to fetch it
 

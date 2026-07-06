@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { supabaseAdmin, DESIGNS_BUCKET, MOCKUPS_BUCKET } from "@/lib/supabase/server";
+import { getSupabaseAdmin, DESIGNS_BUCKET, MOCKUPS_BUCKET } from "@/lib/supabase/server";
 
 const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg"];
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   const designBuffer = Buffer.from(await design.arrayBuffer());
   const mockupBuffer = Buffer.from(await mockup.arrayBuffer());
 
-  const { error: designError } = await supabaseAdmin.storage
+  const { error: designError } = await getSupabaseAdmin().storage
     .from(DESIGNS_BUCKET)
     .upload(designPath, designBuffer, { contentType: design.type, upsert: false });
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `העלאת קובץ העיצוב נכשלה: ${designError.message}` }, { status: 500 });
   }
 
-  const { error: mockupError } = await supabaseAdmin.storage
+  const { error: mockupError } = await getSupabaseAdmin().storage
     .from(MOCKUPS_BUCKET)
     .upload(mockupPath, mockupBuffer, { contentType: "image/png", upsert: false });
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `העלאת תצוגה מקדימה נכשלה: ${mockupError.message}` }, { status: 500 });
   }
 
-  const { data: publicUrlData } = supabaseAdmin.storage.from(MOCKUPS_BUCKET).getPublicUrl(mockupPath);
+  const { data: publicUrlData } = getSupabaseAdmin().storage.from(MOCKUPS_BUCKET).getPublicUrl(mockupPath);
 
   return NextResponse.json({
     imagePath: designPath,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import type { GelatoWebhookPayload } from "@/lib/gelato";
 import type { OrderStatus } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing order identifier" }, { status: 400 });
   }
 
-  const query = supabaseAdmin.from("orders").update(
+  const query = getSupabaseAdmin().from("orders").update(
     nextStatus ? { order_status: nextStatus } : {}
   );
 
