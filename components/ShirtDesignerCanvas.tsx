@@ -4,21 +4,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { Stage, Layer, Image as KonvaImage, Transformer, Rect } from "react-konva";
 import useImage from "use-image";
 import Konva from "konva";
-import type { ProductType, ShirtColor, DesignTransform } from "@/lib/types";
-import { shirtSvgDataUrl, SHIRT_VIEWBOX_WIDTH, SHIRT_VIEWBOX_HEIGHT, PRINT_AREA } from "@/lib/shirtSvg";
+import type { ShirtColor, DesignTransform } from "@/lib/types";
+import { TEE_ASSETS, STAGE_WIDTH, STAGE_HEIGHT } from "@/lib/studio";
 
-export const STAGE_WIDTH = 320;
-export const STAGE_HEIGHT = Math.round(
-  (STAGE_WIDTH / SHIRT_VIEWBOX_WIDTH) * SHIRT_VIEWBOX_HEIGHT
-);
-const SCALE = STAGE_WIDTH / SHIRT_VIEWBOX_WIDTH;
-
-const PRINT_AREA_PX = {
-  x: PRINT_AREA.x * SCALE,
-  y: PRINT_AREA.y * SCALE,
-  width: PRINT_AREA.width * SCALE,
-  height: PRINT_AREA.height * SCALE,
-};
+export { STAGE_WIDTH, STAGE_HEIGHT };
 
 export interface ShirtDesignerCanvasHandle {
   exportMockup: () => string;
@@ -26,23 +15,42 @@ export interface ShirtDesignerCanvasHandle {
 
 interface Props {
   color: ShirtColor;
-  productType: ProductType;
   imageUrl: string | null;
   transform: DesignTransform | null;
   onTransformChange: (t: DesignTransform) => void;
 }
 
+/**
+ * Photorealistic shirt designer.
+ *
+ * The design layer renders three synced nodes so the artwork inherits the
+ * garment's fabric folds:
+ *   1. the design image (user transform applied)
+ *   2. the base garment photo blended over it — "multiply" on light fabric
+ *      (folds darken the print), "screen" on dark fabric (highlights sheen)
+ *   3. the design image again with "destination-in", masking the blend back
+ *      to the design's own alpha so the rest of the print area is untouched.
+ * The layer has its own canvas, so these ops never affect the photo below.
+ */
 const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(function ShirtDesignerCanvas(
-  { color, productType, imageUrl, transform, onTransformChange },
+  { color, imageUrl, transform, onTransformChange },
   ref
 ) {
+  const asset = TEE_ASSETS[color];
+  const printPx = {
+    x: asset.print.x * STAGE_WIDTH,
+    y: asset.print.y * STAGE_HEIGHT,
+    width: asset.print.w * STAGE_WIDTH,
+    height: asset.print.h * STAGE_HEIGHT,
+  };
+
   const stageRef = useRef<Konva.Stage>(null);
   const guideLayerRef = useRef<Konva.Layer>(null);
   const imageNodeRef = useRef<Konva.Image>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [selected, setSelected] = useState(false);
 
-  const [shirtImg] = useImage(shirtSvgDataUrl(color, productType));
+  const [shirtImg] = useImage(asset.src);
   const [designImg] = useImage(imageUrl || "", "anonymous");
 
   useEffect(() => {
@@ -54,12 +62,10 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
 
   useEffect(() => {
     if (designImg && !transform) {
-      const maxW = PRINT_AREA_PX.width;
-      const maxH = PRINT_AREA_PX.height;
-      const scale = Math.min(maxW / designImg.width, maxH / designImg.height, 1) * 0.95;
+      const scale = Math.min(printPx.width / designImg.width, printPx.height / designImg.height) * 0.85;
       onTransformChange({
-        x: STAGE_WIDTH / 2,
-        y: STAGE_HEIGHT / 2,
+        x: printPx.x + printPx.width / 2,
+        y: printPx.y + printPx.height * 0.42,
         scaleX: scale,
         scaleY: scale,
         rotation: 0,
@@ -83,26 +89,48 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
     },
   }));
 
+  const designNodeProps = designImg && transform
+    ? {
+        image: designImg,
+        width: designImg.width,
+        height: designImg.height,
+        offsetX: designImg.width / 2,
+        offsetY: designImg.height / 2,
+        x: transform.x,
+        y: transform.y,
+        scaleX: transform.scaleX,
+        scaleY: transform.scaleY,
+        rotation: transform.rotation,
+      }
+    : null;
+
+  const fabricBlend = asset.fabric === "light" ? "multiply" : "screen";
+
   return (
     <Stage
       ref={stageRef}
       width={STAGE_WIDTH}
       height={STAGE_HEIGHT}
-      className="rounded-lg border border-neutral-200 bg-neutral-50 touch-none"
+      className="rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50 touch-none"
       onMouseDown={(e) => {
-        if (e.target === e.target.getStage()) setSelected(false);
+        if (e.target === e.target.getStage() || e.target.name() === "base-photo") setSelected(false);
+      }}
+      onTouchStart={(e) => {
+        if (e.target === e.target.getStage() || e.target.name() === "base-photo") setSelected(false);
       }}
     >
       <Layer listening={false}>
-        {shirtImg && <KonvaImage image={shirtImg} width={STAGE_WIDTH} height={STAGE_HEIGHT} />}
+        {shirtImg && (
+          <KonvaImage name="base-photo" image={shirtImg} width={STAGE_WIDTH} height={STAGE_HEIGHT} listening />
+        )}
       </Layer>
 
       <Layer ref={guideLayerRef} listening={false}>
         <Rect
-          x={PRINT_AREA_PX.x}
-          y={PRINT_AREA_PX.y}
-          width={PRINT_AREA_PX.width}
-          height={PRINT_AREA_PX.height}
+          x={printPx.x}
+          y={printPx.y}
+          width={printPx.width}
+          height={printPx.height}
           stroke="#93c5fd"
           dash={[6, 4]}
           strokeWidth={1.5}
@@ -110,25 +138,20 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
       </Layer>
 
       <Layer>
-        {designImg && transform && (
+        {designNodeProps && (
           <>
             <KonvaImage
               ref={imageNodeRef}
-              image={designImg}
-              width={designImg.width}
-              height={designImg.height}
-              offsetX={designImg.width / 2}
-              offsetY={designImg.height / 2}
-              x={transform.x}
-              y={transform.y}
-              scaleX={transform.scaleX}
-              scaleY={transform.scaleY}
-              rotation={transform.rotation}
+              {...designNodeProps}
               draggable
               onClick={() => setSelected(true)}
               onTap={() => setSelected(true)}
               onDragEnd={(e) => {
-                onTransformChange({ ...transform, x: e.target.x(), y: e.target.y() });
+                onTransformChange({
+                  ...(transform as DesignTransform),
+                  x: e.target.x(),
+                  y: e.target.y(),
+                });
               }}
               onTransformEnd={(e) => {
                 const node = e.target;
@@ -141,17 +164,27 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
                 });
               }}
             />
+            {shirtImg && (
+              <KonvaImage
+                image={shirtImg}
+                width={STAGE_WIDTH}
+                height={STAGE_HEIGHT}
+                listening={false}
+                globalCompositeOperation={fabricBlend}
+                opacity={asset.fabric === "light" ? 1 : 0.9}
+              />
+            )}
+            <KonvaImage
+              {...designNodeProps}
+              listening={false}
+              globalCompositeOperation="destination-in"
+            />
             {selected && (
               <Transformer
                 ref={trRef}
                 rotateEnabled
                 keepRatio
-                enabledAnchors={[
-                  "top-left",
-                  "top-right",
-                  "bottom-left",
-                  "bottom-right",
-                ]}
+                enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
                 boundBoxFunc={(oldBox, newBox) => {
                   if (newBox.width < 20 || newBox.height < 20) return oldBox;
                   return newBox;

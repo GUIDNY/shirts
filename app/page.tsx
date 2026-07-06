@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ShirtSvg from "@/components/ShirtSvg";
+import Image from "next/image";
 
 const STEPS = [
   { title: "מעלים תמונה", desc: "בוחרים לוגו או תמונה מהמחשב או מהנייד" },
@@ -8,10 +8,10 @@ const STEPS = [
   { title: "מקבלים עד הבית", desc: "הדפסה ומשלוח ישירות אליכם" },
 ];
 
-const EXAMPLES: { color: "white" | "black" | "blue"; label: string }[] = [
-  { color: "white", label: "חולצה לבנה" },
-  { color: "black", label: "חולצה שחורה" },
-  { color: "blue", label: "חולצה כחולה" },
+const EXAMPLES: { src: string; label: string }[] = [
+  { src: "/studio/tee-white.jpg", label: "חולצה לבנה" },
+  { src: "/studio/tee-black.jpg", label: "חולצה שחורה" },
+  { src: "/studio/tee-blue.jpg", label: "חולצה כחולה" },
 ];
 
 export default function HomePage() {
@@ -53,11 +53,13 @@ export default function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {EXAMPLES.map((ex) => (
             <div
-              key={ex.color}
-              className="rounded-lg border border-neutral-200 p-6 flex flex-col items-center hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow"
+              key={ex.src}
+              className="rounded-lg border border-neutral-200 overflow-hidden flex flex-col items-center hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow"
             >
-              <ShirtSvg color={ex.color} className="w-40 h-48" />
-              <p className="mt-4 font-medium text-neutral-900">{ex.label}</p>
+              <div className="relative w-full aspect-[3/4]">
+                <Image src={ex.src} alt={ex.label} fill className="object-cover" sizes="(max-width: 640px) 100vw, 33vw" />
+              </div>
+              <p className="py-4 font-medium text-neutral-900">{ex.label}</p>
             </div>
           ))}
         </div>

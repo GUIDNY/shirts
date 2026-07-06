@@ -19,7 +19,14 @@ import type { ShirtDesignerCanvasHandle } from "@/components/ShirtDesignerCanvas
 const ShirtDesignerCanvas = dynamic(() => import("@/components/ShirtDesignerCanvas"), {
   ssr: false,
   loading: () => (
-    <div className="w-[320px] h-[400px] rounded-lg border border-neutral-200 bg-neutral-50 animate-pulse" />
+    <div className="w-[360px] h-[480px] rounded-lg border border-neutral-200 bg-neutral-50 animate-pulse" />
+  ),
+});
+
+const ModelPreview = dynamic(() => import("@/components/ModelPreview"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-[360px] h-[480px] rounded-lg border border-neutral-200 bg-neutral-50 animate-pulse" />
   ),
 });
 
@@ -40,6 +47,7 @@ export default function DesignPage() {
   const [transform, setTransform] = useState<DesignTransform | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [view, setView] = useState<"flat" | "model">("flat");
 
   const canvasRef = useRef<ShirtDesignerCanvasHandle>(null);
 
@@ -114,17 +122,50 @@ export default function DesignPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
         <div className="flex flex-col items-center gap-4">
-          <ShirtDesignerCanvas
-            ref={canvasRef}
-            color={color}
-            productType={productType}
-            imageUrl={imageUrl}
-            transform={transform}
-            onTransformChange={setTransform}
-          />
+          <div className="flex gap-1 rounded-lg bg-neutral-100 p-1" role="tablist" aria-label="תצוגה">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === "flat"}
+              onClick={() => setView("flat")}
+              className={`h-9 px-5 rounded-md text-sm font-medium transition-colors ${
+                view === "flat" ? "bg-white shadow-sm text-neutral-900" : "text-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              על חולצה
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === "model"}
+              onClick={() => setView("model")}
+              className={`h-9 px-5 rounded-md text-sm font-medium transition-colors ${
+                view === "model" ? "bg-white shadow-sm text-neutral-900" : "text-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              על דוגמן
+            </button>
+          </div>
+
+          {/* the editor stays mounted so its transform state survives tab switches */}
+          <div className={view === "flat" ? "" : "hidden"}>
+            <ShirtDesignerCanvas
+              ref={canvasRef}
+              color={color}
+              imageUrl={imageUrl}
+              transform={transform}
+              onTransformChange={setTransform}
+            />
+          </div>
+          {view === "model" && (
+            <ModelPreview color={color} imageUrl={imageUrl} transform={transform} />
+          )}
+
           {imageUrl ? (
             <p className="text-sm text-neutral-500">
-              גררו את התמונה כדי להזיז, ומהפינות כדי להגדיל, להקטין או לסובב
+              {view === "flat"
+                ? "גררו את התמונה כדי להזיז, ומהפינות כדי להגדיל, להקטין או לסובב"
+                : "כך ההדפסה תיראה במציאות — חזרו ל\"על חולצה\" כדי לערוך"}
             </p>
           ) : (
             <label className="w-full max-w-[320px] flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-neutral-300 cursor-pointer hover:border-neutral-400 transition-colors text-neutral-500 text-sm">
