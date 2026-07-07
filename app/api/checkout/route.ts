@@ -4,6 +4,7 @@ import { createGelatoOrder } from "@/lib/gelato";
 import { getStripe } from "@/lib/stripe";
 import { calculatePrice } from "@/lib/pricing";
 import {
+  ALL_COLORS,
   COLOR_LABELS,
   PRODUCT_LABELS,
   SIZES,
@@ -12,7 +13,6 @@ import {
 } from "@/lib/types";
 
 const VALID_PRODUCT_TYPES = ["men", "women", "kids"];
-const VALID_COLORS = ["white", "black", "blue"];
 
 function isBlobUrl(url: unknown): boolean {
   if (typeof url !== "string") return false;
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     !item ||
     !customer ||
     !VALID_PRODUCT_TYPES.includes(item.productType) ||
-    !VALID_COLORS.includes(item.color) ||
+    !ALL_COLORS.includes(item.color) ||
     !SIZES.includes(item.size) ||
     !Number.isInteger(item.quantity) ||
     item.quantity < 1 ||
@@ -41,6 +41,11 @@ export async function POST(request: Request) {
     !isBlobUrl(item.mockupUrl)
   ) {
     return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
+  }
+
+  const hasBack = Boolean(item.backImageUrl || item.backMockupUrl);
+  if (hasBack && (!isBlobUrl(item.backImageUrl ?? "") || !isBlobUrl(item.backMockupUrl ?? ""))) {
+    return NextResponse.json({ error: "נתוני הדפסת הגב אינם תקינים" }, { status: 400 });
   }
 
   if (item.productType === "kids" && item.size === "XXL") {
@@ -76,6 +81,8 @@ export async function POST(request: Request) {
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.mockupUrl,
+      back_image_url: hasBack ? (item.backImageUrl as string) : null,
+      back_mockup_url: hasBack ? (item.backMockupUrl as string) : null,
       price: price.total,
     });
   } catch (err) {

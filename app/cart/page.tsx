@@ -35,8 +35,15 @@ export default function CartPage() {
       <h1 className="text-2xl md:text-3xl font-bold mb-8">סל קניות</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8 border border-neutral-200 rounded-lg p-5">
-        <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden bg-neutral-50">
-          <Image src={item.mockupUrl} alt="תצוגה מקדימה של החולצה" fill className="object-contain" unoptimized />
+        <div className="flex flex-col gap-2">
+          <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
+            <Image src={item.mockupUrl} alt="תצוגה מקדימה של החולצה" fill className="object-contain" unoptimized />
+          </div>
+          {item.backMockupUrl && (
+            <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
+              <Image src={item.backMockupUrl} alt="תצוגה מקדימה של גב החולצה" fill className="object-contain" unoptimized />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
@@ -46,6 +53,12 @@ export default function CartPage() {
             <dd>{COLOR_LABELS[item.color]}</dd>
             <dt className="text-neutral-500">מידה</dt>
             <dd>{item.size}</dd>
+            {item.backMockupUrl && (
+              <>
+                <dt className="text-neutral-500">הדפסה</dt>
+                <dd>חזית + גב</dd>
+              </>
+            )}
           </dl>
 
           <div className="flex items-center gap-3 mt-2">

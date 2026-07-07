@@ -1,53 +1,50 @@
-import type { ShirtColor } from "./types";
+import type { PrintSide, ProductType } from "./types";
 
 /**
- * Photographic studio assets (AI-generated product/model photography) and
- * their calibrated print areas. All print-box values are fractions of the
- * image dimensions (0..1), measured against a 10% calibration grid.
+ * Photographic studio assets. Every garment ships as a WHITE photo plus a
+ * shirt-only cutout PNG; any fabric color is produced client-side by a
+ * multiply tint masked to the cutout (COLOR_HEX in types.ts), so one photo
+ * serves all six colors. Print boxes are fractions of the image (0..1),
+ * measured against a 10% calibration grid.
  */
 export interface StudioAsset {
-  src: string;
-  /** Print-safe area on the garment, as fractions of the image. */
+  /** Full photo (base). For flat tees this is empty — the cutout IS the base. */
+  base: string | null;
+  /** Shirt-only cutout PNG (transparent outside the garment). */
+  cutout: string;
   print: { x: number; y: number; w: number; h: number };
-  /** "light" fabric darkens the print (multiply); "dark" adds highlights (screen). */
-  fabric: "light" | "dark";
 }
 
-/** Flat ghost-mannequin product shots — the interactive editor base. */
-export const TEE_ASSETS: Record<ShirtColor, StudioAsset> = {
-  white: {
-    src: "/studio/tee-white.jpg",
+/** Flat ghost-mannequin views — the interactive editor base, front and back. */
+export const FLAT_ASSETS: Record<PrintSide, StudioAsset> = {
+  front: {
+    base: null,
+    cutout: "/studio/cut-tee-front.png",
     print: { x: 0.3, y: 0.27, w: 0.4, h: 0.45 },
-    fabric: "light",
   },
-  black: {
-    src: "/studio/tee-black.jpg",
-    print: { x: 0.3, y: 0.27, w: 0.4, h: 0.45 },
-    fabric: "dark",
-  },
-  blue: {
-    src: "/studio/tee-blue.jpg",
-    print: { x: 0.3, y: 0.27, w: 0.4, h: 0.45 },
-    fabric: "dark",
+  back: {
+    base: null,
+    cutout: "/studio/cut-tee-back.png",
+    print: { x: 0.3, y: 0.26, w: 0.4, h: 0.48 },
   },
 };
 
-/** Model photos wearing a matching plain tee — the "on a person" preview. */
-export const MODEL_ASSETS: Record<ShirtColor, StudioAsset> = {
-  white: {
-    src: "/studio/model-white.jpg",
+/** Model photos (wearing white) keyed by product type — the "on a person" preview. */
+export const MODEL_ASSETS: Record<ProductType, StudioAsset> = {
+  men: {
+    base: "/studio/model-men.jpg",
+    cutout: "/studio/cut-model-men.png",
     print: { x: 0.32, y: 0.4, w: 0.36, h: 0.29 },
-    fabric: "light",
   },
-  black: {
-    src: "/studio/model-black.jpg",
-    print: { x: 0.33, y: 0.37, w: 0.34, h: 0.3 },
-    fabric: "dark",
+  women: {
+    base: "/studio/model-women.jpg",
+    cutout: "/studio/cut-model-women.png",
+    print: { x: 0.34, y: 0.4, w: 0.32, h: 0.29 },
   },
-  blue: {
-    src: "/studio/model-blue.jpg",
-    print: { x: 0.32, y: 0.43, w: 0.36, h: 0.28 },
-    fabric: "dark",
+  kids: {
+    base: "/studio/model-kids.jpg",
+    cutout: "/studio/cut-model-kids.png",
+    print: { x: 0.32, y: 0.42, w: 0.36, h: 0.3 },
   },
 };
 

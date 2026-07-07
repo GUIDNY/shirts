@@ -18,12 +18,15 @@ create table if not exists orders (
   -- product
   product_type text not null check (product_type in ('men', 'women', 'kids')),
   size text not null check (size in ('S', 'M', 'L', 'XL', 'XXL')),
-  color text not null check (color in ('white', 'black', 'blue')),
+  color text not null check (color in ('white', 'black', 'blue', 'red', 'royal', 'pink')),
   quantity int not null check (quantity > 0),
 
   -- design files (public Vercel Blob URLs with random suffixes)
   image_url text not null,
   mockup_url text not null,
+  -- optional back print
+  back_image_url text,
+  back_mockup_url text,
 
   -- pricing
   price numeric(10, 2) not null,

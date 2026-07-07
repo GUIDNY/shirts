@@ -1,6 +1,8 @@
 export type ProductType = "men" | "women" | "kids";
 
-export type ShirtColor = "white" | "black" | "blue";
+export type ShirtColor = "white" | "black" | "blue" | "red" | "royal" | "pink";
+
+export type PrintSide = "front" | "back";
 
 export type Size = "S" | "M" | "L" | "XL" | "XXL";
 
@@ -32,14 +34,27 @@ export const PRODUCT_LABELS: Record<ProductType, string> = {
 export const COLOR_LABELS: Record<ShirtColor, string> = {
   white: "לבן",
   black: "שחור",
-  blue: "כחול",
+  blue: "נייבי",
+  red: "אדום",
+  royal: "כחול רויאל",
+  pink: "ורוד",
 };
 
+/**
+ * Garment tint colors. Applied as a multiply blend over the white studio
+ * photos, so they should approximate the real Gildan fabric colors.
+ * "white" is a no-op tint by design.
+ */
 export const COLOR_HEX: Record<ShirtColor, string> = {
-  white: "#f5f5f5",
-  black: "#1a1a1a",
-  blue: "#1e3a8a",
+  white: "#ffffff",
+  black: "#2b2b2b",
+  blue: "#22335c",
+  red: "#c0272d",
+  royal: "#1d4f91",
+  pink: "#f48ca4",
 };
+
+export const ALL_COLORS: ShirtColor[] = ["white", "black", "blue", "red", "royal", "pink"];
 
 export const SIZES: Size[] = ["S", "M", "L", "XL", "XXL"];
 
@@ -56,11 +71,15 @@ export interface CartItem {
   color: ShirtColor;
   size: Size;
   quantity: number;
-  /** Public Blob URL of the original design file (Gelato fetches this). */
+  /** Public Blob URL of the front design file (Gelato fetches this). */
   imageUrl: string;
-  /** Public Blob URL of the rendered shirt mockup. */
+  /** Public Blob URL of the rendered front mockup. */
   mockupUrl: string;
   transform: DesignTransform;
+  /** Optional back print. Both URL fields are set together or not at all. */
+  backImageUrl?: string | null;
+  backMockupUrl?: string | null;
+  backTransform?: DesignTransform | null;
 }
 
 export interface CustomerDetails {
@@ -88,6 +107,8 @@ export interface OrderRecord {
   quantity: number;
   image_url: string;
   mockup_url: string;
+  back_image_url: string | null;
+  back_mockup_url: string | null;
   price: number;
   payment_status: PaymentStatus;
   order_status: OrderStatus;

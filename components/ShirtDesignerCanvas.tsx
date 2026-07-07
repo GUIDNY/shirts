@@ -1,11 +1,12 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Stage, Layer, Image as KonvaImage, Transformer, Rect } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Rect, Transformer } from "react-konva";
 import useImage from "use-image";
 import Konva from "konva";
-import type { ShirtColor, DesignTransform } from "@/lib/types";
-import { TEE_ASSETS, STAGE_WIDTH, STAGE_HEIGHT } from "@/lib/studio";
+import type { ShirtColor, PrintSide, DesignTransform } from "@/lib/types";
+import { COLOR_HEX } from "@/lib/types";
+import { FLAT_ASSETS, STAGE_WIDTH, STAGE_HEIGHT } from "@/lib/studio";
 
 export { STAGE_WIDTH, STAGE_HEIGHT };
 
@@ -15,28 +16,26 @@ export interface ShirtDesignerCanvasHandle {
 
 interface Props {
   color: ShirtColor;
+  side: PrintSide;
   imageUrl: string | null;
   transform: DesignTransform | null;
   onTransformChange: (t: DesignTransform) => void;
 }
 
 /**
- * Photorealistic shirt designer.
+ * Photorealistic shirt designer over a studio photo.
  *
- * The design layer renders three synced nodes so the artwork inherits the
- * garment's fabric folds:
- *   1. the design image (user transform applied)
- *   2. the base garment photo blended over it — "multiply" on light fabric
- *      (folds darken the print), "screen" on dark fabric (highlights sheen)
- *   3. the design image again with "destination-in", masking the blend back
- *      to the design's own alpha so the rest of the print area is untouched.
- * The layer has its own canvas, so these ops never affect the photo below.
+ * Garment layer: the white-shirt cutout, tinted to the selected fabric color
+ * with a multiply rect masked back to the cutout's alpha — one photo serves
+ * every color. Design layer: the artwork, the white cutout multiplied over it
+ * (fabric folds shade the print), masked back to the artwork's alpha.
+ * Each stack lives in its own Konva layer so the composite ops stay isolated.
  */
 const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(function ShirtDesignerCanvas(
-  { color, imageUrl, transform, onTransformChange },
+  { color, side, imageUrl, transform, onTransformChange },
   ref
 ) {
-  const asset = TEE_ASSETS[color];
+  const asset = FLAT_ASSETS[side];
   const printPx = {
     x: asset.print.x * STAGE_WIDTH,
     y: asset.print.y * STAGE_HEIGHT,
@@ -50,7 +49,7 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
   const trRef = useRef<Konva.Transformer>(null);
   const [selected, setSelected] = useState(false);
 
-  const [shirtImg] = useImage(asset.src);
+  const [cutoutImg] = useImage(asset.cutout);
   const [designImg] = useImage(imageUrl || "", "anonymous");
 
   useEffect(() => {
@@ -104,27 +103,50 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
       }
     : null;
 
-  const fabricBlend = asset.fabric === "light" ? "multiply" : "screen";
-
   return (
     <Stage
       ref={stageRef}
       width={STAGE_WIDTH}
       height={STAGE_HEIGHT}
-      className="rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50 touch-none"
+      className="rounded-lg overflow-hidden border border-neutral-200 touch-none"
       onMouseDown={(e) => {
-        if (e.target === e.target.getStage() || e.target.name() === "base-photo") setSelected(false);
+        if (e.target === e.target.getStage() || e.target.name() === "garment") setSelected(false);
       }}
       onTouchStart={(e) => {
-        if (e.target === e.target.getStage() || e.target.name() === "base-photo") setSelected(false);
+        if (e.target === e.target.getStage() || e.target.name() === "garment") setSelected(false);
       }}
     >
+      {/* studio background */}
       <Layer listening={false}>
-        {shirtImg && (
-          <KonvaImage name="base-photo" image={shirtImg} width={STAGE_WIDTH} height={STAGE_HEIGHT} listening />
+        <Rect x={0} y={0} width={STAGE_WIDTH} height={STAGE_HEIGHT} fill="#eceef0" />
+      </Layer>
+
+      {/* tinted garment */}
+      <Layer>
+        {cutoutImg && (
+          <>
+            <KonvaImage name="garment" image={cutoutImg} width={STAGE_WIDTH} height={STAGE_HEIGHT} />
+            <Rect
+              x={0}
+              y={0}
+              width={STAGE_WIDTH}
+              height={STAGE_HEIGHT}
+              fill={COLOR_HEX[color]}
+              listening={false}
+              globalCompositeOperation="multiply"
+            />
+            <KonvaImage
+              image={cutoutImg}
+              width={STAGE_WIDTH}
+              height={STAGE_HEIGHT}
+              listening={false}
+              globalCompositeOperation="destination-in"
+            />
+          </>
         )}
       </Layer>
 
+      {/* print-area guide */}
       <Layer ref={guideLayerRef} listening={false}>
         <Rect
           x={printPx.x}
@@ -137,6 +159,7 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
         />
       </Layer>
 
+      {/* design shaded by fabric folds */}
       <Layer>
         {designNodeProps && (
           <>
@@ -164,21 +187,16 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
                 });
               }}
             />
-            {shirtImg && (
+            {cutoutImg && (
               <KonvaImage
-                image={shirtImg}
+                image={cutoutImg}
                 width={STAGE_WIDTH}
                 height={STAGE_HEIGHT}
                 listening={false}
-                globalCompositeOperation={fabricBlend}
-                opacity={asset.fabric === "light" ? 1 : 0.9}
+                globalCompositeOperation="multiply"
               />
             )}
-            <KonvaImage
-              {...designNodeProps}
-              listening={false}
-              globalCompositeOperation="destination-in"
-            />
+            <KonvaImage {...designNodeProps} listening={false} globalCompositeOperation="destination-in" />
             {selected && (
               <Transformer
                 ref={trRef}

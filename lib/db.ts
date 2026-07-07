@@ -35,6 +35,8 @@ export interface NewOrder {
   quantity: number;
   image_url: string;
   mockup_url: string;
+  back_image_url: string | null;
+  back_mockup_url: string | null;
   price: number;
 }
 
@@ -42,12 +44,14 @@ export async function insertOrder(order: NewOrder): Promise<OrderRecord> {
   const rows = (await sql()`
     insert into orders (
       customer_name, phone, email, address, city, zip, notes,
-      product_type, size, color, quantity, image_url, mockup_url, price
+      product_type, size, color, quantity, image_url, mockup_url,
+      back_image_url, back_mockup_url, price
     ) values (
       ${order.customer_name}, ${order.phone}, ${order.email}, ${order.address},
       ${order.city}, ${order.zip}, ${order.notes},
       ${order.product_type}, ${order.size}, ${order.color}, ${order.quantity},
-      ${order.image_url}, ${order.mockup_url}, ${order.price}
+      ${order.image_url}, ${order.mockup_url},
+      ${order.back_image_url}, ${order.back_mockup_url}, ${order.price}
     )
     returning *
   `) as OrderRecord[];

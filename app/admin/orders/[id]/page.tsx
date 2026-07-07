@@ -78,22 +78,45 @@ export default async function AdminOrderDetailPage({
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5">
           <h2 className="font-semibold mb-3">תצוגה מקדימה (Mockup)</h2>
-          <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden bg-neutral-50">
-            <Image src={order.mockup_url} alt="Mockup" fill className="object-contain" unoptimized />
+          <div className={`grid gap-3 ${order.back_mockup_url ? "grid-cols-2" : "grid-cols-1"}`}>
+            <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
+              <Image src={order.mockup_url} alt="Mockup חזית" fill className="object-contain" unoptimized />
+            </div>
+            {order.back_mockup_url && (
+              <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
+                <Image src={order.back_mockup_url} alt="Mockup גב" fill className="object-contain" unoptimized />
+              </div>
+            )}
           </div>
+          {order.back_mockup_url && (
+            <p className="text-xs text-neutral-500 mt-2">חזית · גב — הזמנה עם הדפסה דו-צדדית</p>
+          )}
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5">
-          <h2 className="font-semibold mb-3">קובץ עיצוב מקורי</h2>
-          <a
-            href={order.image_url}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
-          >
-            הורדת קובץ העיצוב
-          </a>
+          <h2 className="font-semibold mb-3">קבצי עיצוב מקוריים</h2>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={order.image_url}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
+            >
+              הורדת עיצוב החזית
+            </a>
+            {order.back_image_url && (
+              <a
+                href={order.back_image_url}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
+              >
+                הורדת עיצוב הגב
+              </a>
+            )}
+          </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5 md:col-span-2">

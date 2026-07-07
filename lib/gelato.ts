@@ -24,6 +24,9 @@ const GELATO_COLOR: Record<ShirtColor, string> = {
   white: "white",
   black: "black",
   blue: "navy",
+  red: "red",
+  royal: "royal",
+  pink: "azalea",
 };
 
 const GELATO_SIZE: Record<Size, string> = {
@@ -45,14 +48,21 @@ const GELATO_PRINT_AREA = "front";
  */
 const GELATO_SHIPMENT_METHOD = process.env.GELATO_SHIPMENT_METHOD || "express";
 
-export function getProductUid(productType: ProductType, color: ShirtColor, size: Size): string {
+export function getProductUid(
+  productType: ProductType,
+  color: ShirtColor,
+  size: Size,
+  hasBackPrint: boolean
+): string {
   if (productType === "kids" && size === "XXL") {
     throw new Error("Gelato does not offer kids t-shirts in size XXL.");
   }
   const cut = GELATO_CUT[productType];
   const gelatoColor = GELATO_COLOR[color];
   const gelatoSize = GELATO_SIZE[size];
-  return `apparel_product_gca_t-shirt_gsc_crewneck_gcu_${cut}_gqa_classic_gsi_${gelatoSize}_gco_${gelatoColor}_gpr_4-0`;
+  // "4-0" = full-color front print only; "4-4" = full-color front + back.
+  const gpr = hasBackPrint ? "4-4" : "4-0";
+  return `apparel_product_gca_t-shirt_gsc_crewneck_gcu_${cut}_gqa_classic_gsi_${gelatoSize}_gco_${gelatoColor}_gpr_${gpr}`;
 }
 
 export interface GelatoOrderResponse {
@@ -83,8 +93,15 @@ export async function createGelatoOrder(
     throw new Error("Refusing to send an unpaid order to Gelato production.");
   }
 
-  const productUid = getProductUid(order.product_type, order.color, order.size);
-  const designFileUrl = order.image_url;
+  const hasBackPrint = Boolean(order.back_image_url);
+  const productUid = getProductUid(order.product_type, order.color, order.size, hasBackPrint);
+
+  const files: { type: string; url: string }[] = [
+    { type: GELATO_PRINT_AREA, url: order.image_url },
+  ];
+  if (hasBackPrint) {
+    files.push({ type: "back", url: order.back_image_url as string });
+  }
 
   const body = {
     orderType,
@@ -95,12 +112,7 @@ export async function createGelatoOrder(
       {
         itemReferenceId: `${order.id}-item-1`,
         productUid,
-        files: [
-          {
-            type: GELATO_PRINT_AREA,
-            url: designFileUrl,
-          },
-        ],
+        files,
         quantity: order.quantity,
       },
     ],
