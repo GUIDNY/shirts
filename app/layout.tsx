@@ -12,7 +12,7 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "הדפסה על חולצות בעיצוב אישי",
+  title: "TEEVO — הדפסה על חולצות בעיצוב אישי",
   description: "מעלים תמונה, בוחרים חולצה, משלמים, מקבלים עד הבית.",
 };
 

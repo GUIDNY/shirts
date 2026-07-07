@@ -9,6 +9,25 @@
   --color-accent: #111111;
   --color-brand-blue: #1e3a8a;
   --color-danger: #d32f2f;
+
+  /* Brand: TEEVO */
+  --color-brand-purple: #8b5cf6;
+  --color-brand-indigo: #3b82f6;
+  --brand-gradient: linear-gradient(135deg, var(--color-brand-purple), var(--color-brand-indigo));
+  --color-dark-bg: #0a0a0f;
+  --color-dark-bg-secondary: #111116;
+  --color-dark-border: #24242e;
+}
+
+.brand-gradient-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-gradient-bg {
+  background: var(--brand-gradient);
 }
 
 @theme inline {
