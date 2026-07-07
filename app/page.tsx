@@ -5,10 +5,43 @@ import { LogoMark } from "@/components/Logo";
 const CHECKS = ["בלי עלות התחלה", "בלי מינימום הזמנה", "משלוח מהיר ואמין"];
 
 const FEATURES = [
-  { title: "עורך עיצוב קל", desc: "גוררים, מגדילים ומסובבים — בלי ניסיון קודם" },
-  { title: "6 צבעים ומידות", desc: "S עד XXL, לגברים, נשים וילדים" },
-  { title: "משלוח מהיר", desc: "מדפיסים ושולחים תוך ימים בודדים" },
-  { title: "איכות מובטחת", desc: "לא מרוצים? מחזירים כסף" },
+  {
+    title: "עורך עיצוב קל",
+    desc: "גוררים, מגדילים ומסובבים — בלי ניסיון קודם",
+    icon: (
+      <path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z" stroke="white" strokeWidth="1.6" strokeLinejoin="round" fill="none" />
+    ),
+  },
+  {
+    title: "6 צבעים ומידות",
+    desc: "S עד XXL, לגברים, נשים וילדים",
+    icon: <circle cx="12" cy="12" r="7" stroke="white" strokeWidth="1.6" fill="none" />,
+  },
+  {
+    title: "משלוח מהיר",
+    desc: "מדפיסים ושולחים תוך ימים בודדים",
+    icon: (
+      <>
+        <path d="M3 7h10v9H3z" stroke="white" strokeWidth="1.6" fill="none" />
+        <path d="M13 10h4l3 3v3h-7z" stroke="white" strokeWidth="1.6" fill="none" />
+        <circle cx="7" cy="18" r="1.6" stroke="white" strokeWidth="1.3" fill="none" />
+        <circle cx="17" cy="18" r="1.6" stroke="white" strokeWidth="1.3" fill="none" />
+      </>
+    ),
+  },
+  {
+    title: "איכות מובטחת",
+    desc: "לא מרוצים? מחזירים כסף",
+    icon: (
+      <path
+        d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"
+        stroke="white"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    ),
+  },
 ];
 
 const STEPS = [
@@ -107,7 +140,12 @@ export default function HomePage() {
         <div className="border-t border-white/10">
           <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
             {FEATURES.map((f) => (
-              <div key={f.title} className="text-center lg:text-right">
+              <div key={f.title} className="flex flex-col items-center lg:items-end text-center lg:text-right">
+                <div className="h-10 w-10 rounded-full brand-gradient-bg flex items-center justify-center mb-3 shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    {f.icon}
+                  </svg>
+                </div>
                 <h3 className="font-semibold text-white text-sm md:text-base">{f.title}</h3>
                 <p className="text-xs md:text-sm text-neutral-500 mt-1">{f.desc}</p>
               </div>
@@ -179,6 +217,26 @@ export default function HomePage() {
               <p className="text-xs text-neutral-400 mt-1">בקרוב</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Closing CTA */}
+      <section className="bg-[#0a0a0f] relative overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{ background: "radial-gradient(circle at 50% 0%, #8b5cf6, transparent 60%)" }}
+        />
+        <div className="relative max-w-[700px] mx-auto px-4 md:px-6 py-16 md:py-20 text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white">
+            מוכנים לעצב <span className="brand-gradient-text">חולצה משלכם?</span>
+          </h2>
+          <p className="mt-4 text-neutral-400">מעלים עיצוב, בוחרים צבע ומידה — אנחנו מדפיסים ושולחים עד הבית.</p>
+          <Link
+            href="/design"
+            className="mt-8 inline-flex items-center justify-center h-12 px-10 rounded-md brand-gradient-bg text-white text-base font-semibold hover:brightness-110 transition-all"
+          >
+            התחילו לעצב בחינם
+          </Link>
         </div>
       </section>
     </div>

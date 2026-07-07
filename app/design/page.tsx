@@ -62,6 +62,7 @@ export default function DesignPage() {
   const [view, setView] = useState<"flat" | "model">("flat");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [zoomPct, setZoomPct] = useState(100);
 
   const frontCanvasRef = useRef<ShirtDesignerCanvasHandle>(null);
   const backCanvasRef = useRef<ShirtDesignerCanvasHandle>(null);
@@ -271,7 +272,10 @@ export default function DesignPage() {
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 py-8 md:py-12">
-            <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-4 md:p-6">
+            <div
+              style={{ transform: `scale(${zoomPct / 100})` }}
+              className="transition-transform duration-150 rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-4 md:p-6"
+            >
               <div className={view === "flat" && side === "front" ? "" : "hidden"}>
                 <ShirtDesignerCanvas
                   ref={frontCanvasRef}
@@ -301,6 +305,28 @@ export default function DesignPage() {
                 />
               )}
             </div>
+
+            {view === "flat" && (
+              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg px-1.5 py-1">
+                <button
+                  type="button"
+                  onClick={() => setZoomPct((z) => Math.max(50, z - 10))}
+                  aria-label="הקטן תצוגה"
+                  className="h-7 w-7 rounded text-white hover:bg-white/10 transition-colors"
+                >
+                  −
+                </button>
+                <span className="text-sm text-neutral-300 tabular-nums w-11 text-center">{zoomPct}%</span>
+                <button
+                  type="button"
+                  onClick={() => setZoomPct((z) => Math.min(150, z + 10))}
+                  aria-label="הגדל תצוגה"
+                  className="h-7 w-7 rounded text-white hover:bg-white/10 transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            )}
 
             {view === "model" ? (
               <p className="text-sm text-neutral-500 text-center">

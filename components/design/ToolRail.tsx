@@ -3,6 +3,7 @@
 const ROADMAP_TOOLS = [
   { icon: "🔤", label: "טקסט" },
   { icon: "◇", label: "צורות ואייקונים" },
+  { icon: "🖼️", label: "גלריית גרפיקות" },
   { icon: "🎨", label: "תבניות מוכנות" },
 ];
 
