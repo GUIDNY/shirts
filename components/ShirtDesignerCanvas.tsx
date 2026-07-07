@@ -12,7 +12,13 @@ export { STAGE_WIDTH, STAGE_HEIGHT };
 
 export interface ShirtDesignerCanvasHandle {
   exportMockup: () => string;
+  /** Transparent, print-ready PNG: just the artwork, positioned/scaled/rotated
+   *  exactly as placed on the print area — no fabric shading, no garment. */
+  exportPrintFile: () => string;
 }
+
+/** Print files are rendered at this multiple of the on-screen print-box size. */
+const PRINT_FILE_SCALE = 10;
 
 interface Props {
   color: ShirtColor;
@@ -85,6 +91,31 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
       if (selected && imageNodeRef.current) trRef.current?.nodes([imageNodeRef.current]);
       stageRef.current?.draw();
       return dataUrl;
+    },
+    exportPrintFile: () => {
+      if (!designImg || !transform) return "";
+
+      const fileW = Math.round(printPx.width * PRINT_FILE_SCALE);
+      const fileH = Math.round(printPx.height * PRINT_FILE_SCALE);
+      const canvas = document.createElement("canvas");
+      canvas.width = fileW;
+      canvas.height = fileH;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return "";
+
+      // remap from stage coordinates to print-file coordinates: shift so the
+      // print box's top-left is the origin, then scale up for resolution.
+      const localX = (transform.x - printPx.x) * PRINT_FILE_SCALE;
+      const localY = (transform.y - printPx.y) * PRINT_FILE_SCALE;
+
+      ctx.save();
+      ctx.translate(localX, localY);
+      ctx.rotate((transform.rotation * Math.PI) / 180);
+      ctx.scale(transform.scaleX * PRINT_FILE_SCALE, transform.scaleY * PRINT_FILE_SCALE);
+      ctx.drawImage(designImg, -designImg.width / 2, -designImg.height / 2);
+      ctx.restore();
+
+      return canvas.toDataURL("image/png");
     },
   }));
 

@@ -71,14 +71,19 @@ export interface CartItem {
   color: ShirtColor;
   size: Size;
   quantity: number;
-  /** Public Blob URL of the front design file (Gelato fetches this). */
+  /** Public Blob URL of the original front design file, as uploaded (admin reference only). */
   imageUrl: string;
   /** Public Blob URL of the rendered front mockup. */
   mockupUrl: string;
+  /** Public Blob URL of the print-ready front file — artwork pre-composited at the
+   *  exact position/scale/rotation the customer chose. This, not imageUrl, is what
+   *  gets sent to Gelato. */
+  printFileUrl: string;
   transform: DesignTransform;
-  /** Optional back print. Both URL fields are set together or not at all. */
+  /** Optional back print. All back fields are set together or not at all. */
   backImageUrl?: string | null;
   backMockupUrl?: string | null;
+  backPrintFileUrl?: string | null;
   backTransform?: DesignTransform | null;
 }
 
@@ -107,8 +112,10 @@ export interface OrderRecord {
   quantity: number;
   image_url: string;
   mockup_url: string;
+  print_file_url: string | null;
   back_image_url: string | null;
   back_mockup_url: string | null;
+  back_print_file_url: string | null;
   price: number;
   payment_status: PaymentStatus;
   order_status: OrderStatus;

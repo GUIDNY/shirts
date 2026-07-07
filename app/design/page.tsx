@@ -117,6 +117,41 @@ export default function DesignPage() {
     });
   }
 
+  /** Quick placement presets — "large" matches the default auto-fit centered
+   *  print; "small" mimics a small brand-logo placement (chest corner up
+   *  front, near the collar on the back). */
+  function applyPreset(kind: "large" | "small") {
+    const t = active.transform;
+    const base = active.baseScale;
+    if (!t || !base) return;
+    const asset = FLAT_ASSETS[side];
+    const printPx = {
+      x: asset.print.x * STAGE_WIDTH,
+      y: asset.print.y * STAGE_HEIGHT,
+      width: asset.print.w * STAGE_WIDTH,
+      height: asset.print.h * STAGE_HEIGHT,
+    };
+    if (kind === "large") {
+      updateSide(side, {
+        transform: {
+          ...t,
+          scaleX: base,
+          scaleY: base,
+          x: printPx.x + printPx.width / 2,
+          y: printPx.y + printPx.height * 0.42,
+          rotation: 0,
+        },
+      });
+    } else {
+      const scale = base * 0.4;
+      const posX = side === "front" ? printPx.x + printPx.width * 0.3 : printPx.x + printPx.width * 0.5;
+      const posY = printPx.y + printPx.height * 0.22;
+      updateSide(side, {
+        transform: { ...t, scaleX: scale, scaleY: scale, x: posX, y: posY, rotation: 0 },
+      });
+    }
+  }
+
   async function handleContinue() {
     setError(null);
 
@@ -134,11 +169,15 @@ export default function DesignPage() {
       formData.append("design_front", designs.front.file);
       const frontMockupBlob = await (await fetch(frontCanvasRef.current.exportMockup())).blob();
       formData.append("mockup_front", frontMockupBlob, "mockup-front.png");
+      const frontPrintBlob = await (await fetch(frontCanvasRef.current.exportPrintFile())).blob();
+      formData.append("print_front", frontPrintBlob, "print-front.png");
 
       if (designs.back.file && backCanvasRef.current) {
         formData.append("design_back", designs.back.file);
         const backMockupBlob = await (await fetch(backCanvasRef.current.exportMockup())).blob();
         formData.append("mockup_back", backMockupBlob, "mockup-back.png");
+        const backPrintBlob = await (await fetch(backCanvasRef.current.exportPrintFile())).blob();
+        formData.append("print_back", backPrintBlob, "print-back.png");
       }
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -156,9 +195,11 @@ export default function DesignPage() {
         quantity,
         imageUrl: data.imageUrl,
         mockupUrl: data.mockupUrl,
+        printFileUrl: data.printFileUrl,
         transform: designs.front.transform as DesignTransform,
         backImageUrl: data.backImageUrl || null,
         backMockupUrl: data.backMockupUrl || null,
+        backPrintFileUrl: data.backPrintFileUrl || null,
         backTransform: designs.back.transform || null,
       });
 
@@ -377,7 +418,27 @@ export default function DesignPage() {
           </div>
 
           {view === "flat" && active.url && active.transform && active.baseScale && (
-            <div className="border-t border-white/10 pt-6">
+            <div className="border-t border-white/10 pt-6 flex flex-col gap-5">
+              <div>
+                <h2 className="font-semibold text-white mb-2">גודל ומיקום מהיר</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => applyPreset("large")}
+                    className="h-11 rounded-md border border-white/15 text-neutral-200 text-sm font-medium hover:bg-white/5 transition-colors"
+                  >
+                    הדפסה גדולה במרכז
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset("small")}
+                    className="h-11 rounded-md border border-white/15 text-neutral-200 text-sm font-medium hover:bg-white/5 transition-colors"
+                  >
+                    {side === "front" ? "לוגו קטן בחזה" : "לוגו קטן למעלה"}
+                  </button>
+                </div>
+              </div>
+
               <DesignOptionsPanel
                 transform={active.transform}
                 baseScale={active.baseScale}

@@ -38,13 +38,19 @@ export async function POST(request: Request) {
     !Number.isInteger(item.quantity) ||
     item.quantity < 1 ||
     !isBlobUrl(item.imageUrl) ||
-    !isBlobUrl(item.mockupUrl)
+    !isBlobUrl(item.mockupUrl) ||
+    !isBlobUrl(item.printFileUrl)
   ) {
     return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
   }
 
   const hasBack = Boolean(item.backImageUrl || item.backMockupUrl);
-  if (hasBack && (!isBlobUrl(item.backImageUrl ?? "") || !isBlobUrl(item.backMockupUrl ?? ""))) {
+  if (
+    hasBack &&
+    (!isBlobUrl(item.backImageUrl ?? "") ||
+      !isBlobUrl(item.backMockupUrl ?? "") ||
+      !isBlobUrl(item.backPrintFileUrl ?? ""))
+  ) {
     return NextResponse.json({ error: "נתוני הדפסת הגב אינם תקינים" }, { status: 400 });
   }
 
@@ -81,8 +87,10 @@ export async function POST(request: Request) {
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.mockupUrl,
+      print_file_url: item.printFileUrl,
       back_image_url: hasBack ? (item.backImageUrl as string) : null,
       back_mockup_url: hasBack ? (item.backMockupUrl as string) : null,
+      back_print_file_url: hasBack ? (item.backPrintFileUrl as string) : null,
       price: price.total,
     });
   } catch (err) {

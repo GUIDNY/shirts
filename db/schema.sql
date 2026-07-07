@@ -24,9 +24,14 @@ create table if not exists orders (
   -- design files (public Vercel Blob URLs with random suffixes)
   image_url text not null,
   mockup_url text not null,
+  -- print-ready file: artwork pre-composited at the exact position/scale/
+  -- rotation the customer chose. This is what gets sent to Gelato, not
+  -- image_url (which is the raw original, kept for admin reference).
+  print_file_url text,
   -- optional back print
   back_image_url text,
   back_mockup_url text,
+  back_print_file_url text,
 
   -- pricing
   price numeric(10, 2) not null,

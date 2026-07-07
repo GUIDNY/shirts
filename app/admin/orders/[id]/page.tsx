@@ -94,28 +94,54 @@ export default async function AdminOrderDetailPage({
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-lg p-5">
-          <h2 className="font-semibold mb-3">קבצי עיצוב מקוריים</h2>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={order.image_url}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
-            >
-              הורדת עיצוב החזית
-            </a>
-            {order.back_image_url && (
+          <h2 className="font-semibold mb-3">קבצי עיצוב</h2>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-3">
               <a
-                href={order.back_image_url}
+                href={order.image_url}
                 download
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
               >
-                הורדת עיצוב הגב
+                הורדת עיצוב מקורי (חזית)
               </a>
-            )}
+              {order.back_image_url && (
+                <a
+                  href={order.back_image_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors"
+                >
+                  הורדת עיצוב מקורי (גב)
+                </a>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {order.print_file_url && (
+                <a
+                  href={order.print_file_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-blue-200 bg-blue-50 text-blue-900 text-sm font-medium hover:bg-blue-100 transition-colors"
+                >
+                  קובץ הדפסה למדפסת (חזית) — זה מה שנשלח ל-Gelato
+                </a>
+              )}
+              {order.back_print_file_url && (
+                <a
+                  href={order.back_print_file_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-10 px-4 rounded-md border border-blue-200 bg-blue-50 text-blue-900 text-sm font-medium hover:bg-blue-100 transition-colors"
+                >
+                  קובץ הדפסה למדפסת (גב) — זה מה שנשלח ל-Gelato
+                </a>
+              )}
+            </div>
           </div>
         </div>
 

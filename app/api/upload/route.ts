@@ -16,13 +16,18 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const designFront = formData.get("design_front");
   const mockupFront = formData.get("mockup_front");
+  const printFront = formData.get("print_front");
   const designBack = formData.get("design_back");
   const mockupBack = formData.get("mockup_back");
+  const printBack = formData.get("print_back");
 
   const frontError = validateDesign(designFront, "חזית");
   if (frontError) return NextResponse.json({ error: frontError }, { status: 400 });
   if (!(mockupFront instanceof File)) {
     return NextResponse.json({ error: "חסרה תצוגה מקדימה לחזית" }, { status: 400 });
+  }
+  if (!(printFront instanceof File)) {
+    return NextResponse.json({ error: "חסר קובץ הדפסה לחזית" }, { status: 400 });
   }
 
   const hasBack = designBack !== null || mockupBack !== null;
@@ -31,6 +36,9 @@ export async function POST(request: Request) {
     if (backError) return NextResponse.json({ error: backError }, { status: 400 });
     if (!(mockupBack instanceof File)) {
       return NextResponse.json({ error: "חסרה תצוגה מקדימה לגב" }, { status: 400 });
+    }
+    if (!(printBack instanceof File)) {
+      return NextResponse.json({ error: "חסר קובץ הדפסה לגב" }, { status: 400 });
     }
   }
 
@@ -41,21 +49,26 @@ export async function POST(request: Request) {
     const uploads: Promise<string>[] = [
       uploadPublicFile(`designs/${id}-front.${ext(designFront as File)}`, designFront as File, (designFront as File).type),
       uploadPublicFile(`mockups/${id}-front.png`, mockupFront, "image/png"),
+      uploadPublicFile(`prints/${id}-front.png`, printFront, "image/png"),
     ];
     if (hasBack) {
       uploads.push(
         uploadPublicFile(`designs/${id}-back.${ext(designBack as File)}`, designBack as File, (designBack as File).type),
-        uploadPublicFile(`mockups/${id}-back.png`, mockupBack as File, "image/png")
+        uploadPublicFile(`mockups/${id}-back.png`, mockupBack as File, "image/png"),
+        uploadPublicFile(`prints/${id}-back.png`, printBack as File, "image/png")
       );
     }
 
-    const [imageUrl, mockupUrl, backImageUrl, backMockupUrl] = await Promise.all(uploads);
+    const [imageUrl, mockupUrl, printFileUrl, backImageUrl, backMockupUrl, backPrintFileUrl] =
+      await Promise.all(uploads);
 
     return NextResponse.json({
       imageUrl,
       mockupUrl,
+      printFileUrl,
       backImageUrl: backImageUrl || null,
       backMockupUrl: backMockupUrl || null,
+      backPrintFileUrl: backPrintFileUrl || null,
     });
   } catch (err) {
     return NextResponse.json(

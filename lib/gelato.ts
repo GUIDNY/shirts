@@ -96,11 +96,16 @@ export async function createGelatoOrder(
   const hasBackPrint = Boolean(order.back_image_url);
   const productUid = getProductUid(order.product_type, order.color, order.size, hasBackPrint);
 
+  // Send the pre-composited print file (artwork already positioned/scaled/
+  // rotated exactly as the customer placed it) — never the raw upload,
+  // which Gelato would just center on its own with no knowledge of our
+  // editor's transform. Falls back to the raw file only for pre-migration
+  // orders that don't have a print file on record.
   const files: { type: string; url: string }[] = [
-    { type: GELATO_PRINT_AREA, url: order.image_url },
+    { type: GELATO_PRINT_AREA, url: order.print_file_url || order.image_url },
   ];
   if (hasBackPrint) {
-    files.push({ type: "back", url: order.back_image_url as string });
+    files.push({ type: "back", url: order.back_print_file_url || (order.back_image_url as string) });
   }
 
   const body = {
