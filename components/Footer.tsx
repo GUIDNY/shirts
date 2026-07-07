@@ -6,7 +6,7 @@ import Logo from "@/components/Logo";
 
 export default function Footer() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/design")) return null;
 
   return (
     <footer className="border-t border-white/10 bg-[#0a0a0f] mt-16">

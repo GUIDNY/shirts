@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
+import { FLAT_ASSETS, STAGE_WIDTH, STAGE_HEIGHT } from "@/lib/studio";
 import {
   ALL_COLORS,
   COLOR_HEX,
@@ -18,19 +19,18 @@ import {
   type DesignTransform,
 } from "@/lib/types";
 import type { ShirtDesignerCanvasHandle } from "@/components/ShirtDesignerCanvas";
+import ToolRail from "@/components/design/ToolRail";
+import DesignOptionsPanel from "@/components/design/DesignOptionsPanel";
+import StickyCheckoutBar from "@/components/design/StickyCheckoutBar";
 
 const ShirtDesignerCanvas = dynamic(() => import("@/components/ShirtDesignerCanvas"), {
   ssr: false,
-  loading: () => (
-    <div className="w-[360px] h-[480px] rounded-lg border border-neutral-200 bg-neutral-50 animate-pulse" />
-  ),
+  loading: () => <div className="w-[300px] h-[400px] sm:w-[360px] sm:h-[480px] rounded-lg bg-[#1a1a20] animate-pulse" />,
 });
 
 const ModelPreview = dynamic(() => import("@/components/ModelPreview"), {
   ssr: false,
-  loading: () => (
-    <div className="w-[360px] h-[480px] rounded-lg border border-neutral-200 bg-neutral-50 animate-pulse" />
-  ),
+  loading: () => <div className="w-[300px] h-[400px] sm:w-[360px] sm:h-[480px] rounded-lg bg-[#1a1a20] animate-pulse" />,
 });
 
 const PRODUCT_TYPES: ProductType[] = ["men", "women", "kids"];
@@ -40,9 +40,11 @@ interface SideDesign {
   file: File | null;
   url: string | null;
   transform: DesignTransform | null;
+  /** The auto-fit scale captured the moment a design is first placed — the 100% baseline for the size stepper. */
+  baseScale: number | null;
 }
 
-const EMPTY_SIDE: SideDesign = { file: null, url: null, transform: null };
+const EMPTY_SIDE: SideDesign = { file: null, url: null, transform: null, baseScale: null };
 
 export default function DesignPage() {
   const router = useRouter();
@@ -68,7 +70,15 @@ export default function DesignPage() {
   const active = designs[side];
 
   function updateSide(s: PrintSide, patch: Partial<SideDesign>) {
-    setDesigns((prev) => ({ ...prev, [s]: { ...prev[s], ...patch } }));
+    setDesigns((prev) => {
+      const prevSide = prev[s];
+      const next = { ...prevSide, ...patch };
+      // capture the auto-fit scale once, the first time a transform is set
+      if (patch.transform && prevSide.baseScale == null) {
+        next.baseScale = patch.transform.scaleX;
+      }
+      return { ...prev, [s]: next };
+    });
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -85,7 +95,26 @@ export default function DesignPage() {
       return;
     }
 
-    updateSide(side, { file, url: URL.createObjectURL(file), transform: null });
+    updateSide(side, { file, url: URL.createObjectURL(file), transform: null, baseScale: null });
+  }
+
+  function recenterActive() {
+    const t = active.transform;
+    if (!t) return;
+    const asset = FLAT_ASSETS[side];
+    const printPx = {
+      x: asset.print.x * STAGE_WIDTH,
+      y: asset.print.y * STAGE_HEIGHT,
+      width: asset.print.w * STAGE_WIDTH,
+      height: asset.print.h * STAGE_HEIGHT,
+    };
+    updateSide(side, {
+      transform: {
+        ...t,
+        x: printPx.x + printPx.width / 2,
+        y: printPx.y + printPx.height * 0.42,
+      },
+    });
   }
 
   async function handleContinue() {
@@ -141,116 +170,125 @@ export default function DesignPage() {
     }
   }
 
-  const uploadLabel = side === "front" ? "העלו עיצוב לחזית" : "העלו עיצוב לגב (לא חובה)";
+  const uploadLabel = side === "front" ? "העלאת עיצוב לחזית" : "העלאת עיצוב לגב";
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-10">
-      <h1 className="text-2xl md:text-3xl font-bold mb-8">עיצוב החולצה שלך</h1>
+    <div className="bg-[#0a0a0f] min-h-[calc(100vh-64px)]">
+      <div className="flex flex-col lg:flex-row">
+        <ToolRail uploadLabel={uploadLabel} onFileChange={handleFileChange} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex gap-1 rounded-lg bg-neutral-100 p-1" role="tablist" aria-label="תצוגה">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === "flat" && side === "front"}
-              onClick={() => {
-                setView("flat");
-                setSide("front");
-              }}
-              className={`h-9 px-4 rounded-md text-sm font-medium transition-colors ${
-                view === "flat" && side === "front"
-                  ? "bg-white shadow-sm text-neutral-900"
-                  : "text-neutral-500 hover:text-neutral-800"
-              }`}
-            >
-              חזית
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === "flat" && side === "back"}
-              onClick={() => {
-                setView("flat");
-                setSide("back");
-              }}
-              className={`h-9 px-4 rounded-md text-sm font-medium transition-colors ${
-                view === "flat" && side === "back"
-                  ? "bg-white shadow-sm text-neutral-900"
-                  : "text-neutral-500 hover:text-neutral-800"
-              }`}
-            >
-              גב
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === "model"}
-              onClick={() => setView("model")}
-              className={`h-9 px-4 rounded-md text-sm font-medium transition-colors ${
-                view === "model" ? "bg-white shadow-sm text-neutral-900" : "text-neutral-500 hover:text-neutral-800"
-              }`}
-            >
-              על דוגמן
-            </button>
+        {/* center: view tabs + canvas */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="h-14 border-b border-white/10 flex items-center justify-between px-4 lg:px-6 shrink-0">
+            <span className="text-sm text-neutral-500 hidden sm:block">עיצוב חדש</span>
+            <div className="flex gap-1 rounded-lg bg-white/5 border border-white/10 p-1 mx-auto sm:mx-0" role="tablist" aria-label="תצוגה">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === "flat" && side === "front"}
+                onClick={() => {
+                  setView("flat");
+                  setSide("front");
+                }}
+                className={`h-8 px-3 rounded-md text-sm font-medium transition-colors ${
+                  view === "flat" && side === "front"
+                    ? "brand-gradient-bg text-white"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                חזית
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === "flat" && side === "back"}
+                onClick={() => {
+                  setView("flat");
+                  setSide("back");
+                }}
+                className={`h-8 px-3 rounded-md text-sm font-medium transition-colors ${
+                  view === "flat" && side === "back"
+                    ? "brand-gradient-bg text-white"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                גב
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === "model"}
+                onClick={() => setView("model")}
+                className={`h-8 px-3 rounded-md text-sm font-medium transition-colors ${
+                  view === "model" ? "brand-gradient-bg text-white" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                על דוגמן
+              </button>
+            </div>
+            <span className="hidden sm:block w-16" aria-hidden="true" />
           </div>
 
-          {/* both editors stay mounted so transforms survive tab switches */}
-          <div className={view === "flat" && side === "front" ? "" : "hidden"}>
-            <ShirtDesignerCanvas
-              ref={frontCanvasRef}
-              color={color}
-              side="front"
-              imageUrl={designs.front.url}
-              transform={designs.front.transform}
-              onTransformChange={(t) => updateSide("front", { transform: t })}
-            />
-          </div>
-          <div className={view === "flat" && side === "back" ? "" : "hidden"}>
-            <ShirtDesignerCanvas
-              ref={backCanvasRef}
-              color={color}
-              side="back"
-              imageUrl={designs.back.url}
-              transform={designs.back.transform}
-              onTransformChange={(t) => updateSide("back", { transform: t })}
-            />
-          </div>
-          {view === "model" && (
-            <ModelPreview
-              productType={productType}
-              color={color}
-              imageUrl={designs.front.url}
-              transform={designs.front.transform}
-            />
-          )}
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 py-8 md:py-12">
+            <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-4 md:p-6">
+              <div className={view === "flat" && side === "front" ? "" : "hidden"}>
+                <ShirtDesignerCanvas
+                  ref={frontCanvasRef}
+                  color={color}
+                  side="front"
+                  imageUrl={designs.front.url}
+                  transform={designs.front.transform}
+                  onTransformChange={(t) => updateSide("front", { transform: t })}
+                />
+              </div>
+              <div className={view === "flat" && side === "back" ? "" : "hidden"}>
+                <ShirtDesignerCanvas
+                  ref={backCanvasRef}
+                  color={color}
+                  side="back"
+                  imageUrl={designs.back.url}
+                  transform={designs.back.transform}
+                  onTransformChange={(t) => updateSide("back", { transform: t })}
+                />
+              </div>
+              {view === "model" && (
+                <ModelPreview
+                  productType={productType}
+                  color={color}
+                  imageUrl={designs.front.url}
+                  transform={designs.front.transform}
+                />
+              )}
+            </div>
 
-          {view === "model" ? (
-            <p className="text-sm text-neutral-500">
-              כך ההדפסה הקדמית תיראה במציאות — חזרו ל&quot;חזית&quot; כדי לערוך
-            </p>
-          ) : active.url ? (
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-neutral-500">
-                גררו את התמונה כדי להזיז, ומהפינות כדי להגדיל, להקטין או לסובב
+            {view === "model" ? (
+              <p className="text-sm text-neutral-500 text-center">
+                כך ההדפסה הקדמית תיראה במציאות — חזרו ל&quot;חזית&quot; כדי לערוך
               </p>
-              <label className="text-sm font-medium text-neutral-700 underline cursor-pointer">
-                החלף תמונה
+            ) : active.url ? (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-neutral-500 text-center">
+                  גררו את התמונה כדי להזיז, ומהפינות כדי להגדיל, להקטין או לסובב
+                </p>
+                <label className="text-sm font-medium text-neutral-300 underline cursor-pointer">
+                  החלף תמונה
+                  <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
+                </label>
+              </div>
+            ) : (
+              <label className="lg:hidden w-full max-w-[360px] flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm">
+                <span>{uploadLabel}</span>
+                <span className="text-xs">PNG/JPG, עד 20MB</span>
                 <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
               </label>
-            </div>
-          ) : (
-            <label className="w-full max-w-[360px] flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-neutral-300 cursor-pointer hover:border-neutral-400 transition-colors text-neutral-500 text-sm">
-              <span>{uploadLabel}</span>
-              <span className="text-xs">PNG/JPG, עד 20MB</span>
-              <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
-            </label>
-          )}
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-6">
+        {/* product options panel */}
+        <aside className="w-full lg:w-[360px] shrink-0 border-t lg:border-t-0 lg:border-r border-white/10 p-5 flex flex-col gap-6 pb-32">
           <div>
-            <h2 className="font-semibold mb-2">סוג מוצר</h2>
+            <h2 className="font-semibold text-white mb-2">סוג מוצר</h2>
             <div className="grid grid-cols-3 gap-2">
               {PRODUCT_TYPES.map((pt) => (
                 <button
@@ -263,8 +301,8 @@ export default function DesignPage() {
                   }}
                   className={`h-11 rounded-md border text-sm font-medium transition-colors ${
                     productType === pt
-                      ? "border-neutral-900 bg-neutral-900 text-white"
-                      : "border-neutral-200 hover:bg-neutral-50"
+                      ? "brand-gradient-bg border-transparent text-white"
+                      : "border-white/15 text-neutral-300 hover:bg-white/5"
                   }`}
                 >
                   {PRODUCT_LABELS[pt]}
@@ -274,7 +312,7 @@ export default function DesignPage() {
           </div>
 
           <div>
-            <h2 className="font-semibold mb-2">
+            <h2 className="font-semibold text-white mb-2">
               צבע <span className="font-normal text-neutral-500">· {COLOR_LABELS[color]}</span>
             </h2>
             <div className="flex gap-3 flex-wrap">
@@ -287,7 +325,7 @@ export default function DesignPage() {
                   aria-pressed={color === c}
                   style={{ backgroundColor: c === "white" ? "#f0f0f0" : COLOR_HEX[c] }}
                   className={`h-11 w-11 rounded-full border-2 transition-all ${
-                    color === c ? "border-neutral-900 scale-110" : "border-neutral-200"
+                    color === c ? "border-white scale-110 shadow-[0_0_0_3px_rgba(139,92,246,0.5)]" : "border-white/15"
                   }`}
                 />
               ))}
@@ -295,7 +333,7 @@ export default function DesignPage() {
           </div>
 
           <div>
-            <h2 className="font-semibold mb-2">מידה</h2>
+            <h2 className="font-semibold text-white mb-2">מידה</h2>
             <div className="flex gap-2 flex-wrap">
               {SIZES.filter((s) => !(productType === "kids" && s === "XXL")).map((s) => (
                 <button
@@ -304,8 +342,8 @@ export default function DesignPage() {
                   onClick={() => setSize(s)}
                   className={`h-11 w-14 rounded-md border text-sm font-medium transition-colors ${
                     size === s
-                      ? "border-neutral-900 bg-neutral-900 text-white"
-                      : "border-neutral-200 hover:bg-neutral-50"
+                      ? "brand-gradient-bg border-transparent text-white"
+                      : "border-white/15 text-neutral-300 hover:bg-white/5"
                   }`}
                 >
                   {s}
@@ -315,71 +353,89 @@ export default function DesignPage() {
           </div>
 
           <div>
-            <h2 className="font-semibold mb-2">כמות</h2>
+            <h2 className="font-semibold text-white mb-2">כמות</h2>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="h-11 w-11 rounded-md border border-neutral-200 text-lg hover:bg-neutral-50"
+                className="h-11 w-11 rounded-md border border-white/15 text-white text-lg hover:bg-white/5"
                 aria-label="הפחת כמות"
               >
                 −
               </button>
-              <span className="w-8 text-center font-medium">{quantity}</span>
+              <span className="w-8 text-center font-medium text-white">{quantity}</span>
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
-                className="h-11 w-11 rounded-md border border-neutral-200 text-lg hover:bg-neutral-50"
+                className="h-11 w-11 rounded-md border border-white/15 text-white text-lg hover:bg-white/5"
                 aria-label="הוסף כמות"
               >
                 +
               </button>
             </div>
+            <p className="text-xs text-neutral-500 mt-2">2+ יחידות: 10% הנחה · 5+ יחידות: 20% הנחה</p>
           </div>
 
-          <div className="rounded-lg bg-neutral-50 border border-neutral-200 p-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-neutral-600">מחיר ליחידה</span>
-              <span>{price.unitPrice} ₪</span>
+          {view === "flat" && active.url && active.transform && active.baseScale && (
+            <div className="border-t border-white/10 pt-6">
+              <DesignOptionsPanel
+                transform={active.transform}
+                baseScale={active.baseScale}
+                onChange={(t) => updateSide(side, { transform: t })}
+                onRecenter={recenterActive}
+              />
             </div>
-            {price.discountRate > 0 && (
-              <div className="flex justify-between text-green-700">
-                <span>הנחת כמות</span>
-                <span>-{Math.round(price.discountRate * 100)}%</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-neutral-600">משלוח</span>
-              <span>{price.shipping === 0 ? "חינם" : `${price.shipping} ₪`}</span>
-            </div>
-            <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-neutral-200">
-              <span>סה&quot;כ</span>
-              <span>{price.total} ₪</span>
+          )}
+
+          <div className="border-t border-white/10 pt-6">
+            <h2 className="font-semibold text-white mb-3">שכבות</h2>
+            <div className="flex flex-col gap-2">
+              {(["front", "back"] as PrintSide[]).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    setView("flat");
+                    setSide(s);
+                  }}
+                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    side === s && view === "flat"
+                      ? "border-violet-500/50 bg-violet-500/10"
+                      : "border-white/10 hover:bg-white/5"
+                  }`}
+                >
+                  <span className="h-8 w-8 rounded bg-white/5 overflow-hidden shrink-0 flex items-center justify-center">
+                    {designs[s].url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={designs[s].url as string} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-neutral-600 text-xs">—</span>
+                    )}
+                  </span>
+                  <span className="text-neutral-300">{s === "front" ? "חזית" : "גב"}</span>
+                  <span className="mr-auto text-xs text-neutral-500">
+                    {designs[s].url ? "✓ הועלה" : "לא הועלה"}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
           {designs.back.url && (
-            <p className="text-sm text-neutral-600 bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
+            <p className="text-sm text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-2">
               ✓ ההזמנה כוללת הדפסה על הגב
             </p>
           )}
 
           {error && (
-            <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            <p role="alert" className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
               {error}
             </p>
           )}
-
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={submitting}
-            className="h-12 rounded-md bg-neutral-900 text-white font-semibold hover:bg-neutral-800 transition-colors disabled:opacity-50"
-          >
-            {submitting ? "מעלה..." : "המשך להזמנה"}
-          </button>
-        </div>
+        </aside>
       </div>
+
+      <StickyCheckoutBar price={price} submitting={submitting} onContinue={handleContinue} />
     </div>
   );
 }

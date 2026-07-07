@@ -70,7 +70,7 @@ export default function ModelPreview({ productType, color, imageUrl, transform, 
       width={width}
       height={height}
       listening={false}
-      className="rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50"
+      className="rounded-lg overflow-hidden"
     >
       <Layer listening={false}>
         {baseImg && <KonvaImage image={baseImg} width={width} height={height} />}

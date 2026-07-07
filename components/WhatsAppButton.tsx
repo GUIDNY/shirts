@@ -6,7 +6,7 @@ const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 
 export default function WhatsAppButton() {
   const pathname = usePathname();
-  if (!WHATSAPP_NUMBER || pathname?.startsWith("/admin")) return null;
+  if (!WHATSAPP_NUMBER || pathname?.startsWith("/admin") || pathname?.startsWith("/design")) return null;
 
   return (
     <a

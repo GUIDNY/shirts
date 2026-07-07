@@ -108,7 +108,7 @@ const ShirtDesignerCanvas = forwardRef<ShirtDesignerCanvasHandle, Props>(functio
       ref={stageRef}
       width={STAGE_WIDTH}
       height={STAGE_HEIGHT}
-      className="rounded-lg overflow-hidden border border-neutral-200 touch-none"
+      className="rounded-lg overflow-hidden touch-none"
       onMouseDown={(e) => {
         if (e.target === e.target.getStage() || e.target.name() === "garment") setSelected(false);
       }}
