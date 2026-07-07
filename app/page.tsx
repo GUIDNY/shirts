@@ -137,11 +137,11 @@ export default function HomePage() {
         </div>
 
         {/* Features strip */}
-        <div className="border-t border-white/10">
-          <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-6 pb-16 md:pb-24">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 md:px-10 py-8 grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-4">
             {FEATURES.map((f) => (
               <div key={f.title} className="flex flex-col items-center lg:items-end text-center lg:text-right">
-                <div className="h-10 w-10 rounded-full brand-gradient-bg flex items-center justify-center mb-3 shrink-0">
+                <div className="h-11 w-11 rounded-full brand-gradient-bg flex items-center justify-center mb-3 shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     {f.icon}
                   </svg>
@@ -162,13 +162,21 @@ export default function HomePage() {
           </h2>
           <p className="text-neutral-500 mb-10">מתחילים תוך שלושה צעדים פשוטים.</p>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col">
             {STEPS.map((step, i) => (
               <div key={step.title} className="flex items-start gap-4">
-                <div className="shrink-0 h-10 w-10 rounded-full brand-gradient-bg text-white flex items-center justify-center font-bold">
-                  {i + 1}
+                <div className="shrink-0 flex flex-col items-center">
+                  <div className="h-10 w-10 rounded-full brand-gradient-bg text-white flex items-center justify-center font-bold">
+                    {i + 1}
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div
+                      className="w-px flex-1 my-1.5 min-h-[28px]"
+                      style={{ backgroundImage: "repeating-linear-gradient(to bottom, #d4d4d8 0 4px, transparent 4px 9px)" }}
+                    />
+                  )}
                 </div>
-                <div>
+                <div className="pb-8">
                   <h3 className="font-semibold text-neutral-900">{step.title}</h3>
                   <p className="text-sm text-neutral-500 mt-0.5">{step.desc}</p>
                 </div>
