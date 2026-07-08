@@ -48,11 +48,10 @@ export default function ToteDesignPage() {
     setError(null);
     try {
       const formData = new FormData();
-      // Tote print is a single flat file — the same upload serves as
-      // design, mockup, and print file (matches the poster route).
+      // Uploaded once — the API reuses the same URL for mockup/print
+      // (see /api/upload; sending 3 copies would risk the platform's
+      // request body size limit for a normal-sized photo).
       formData.append("design_front", file);
-      formData.append("mockup_front", file);
-      formData.append("print_front", file);
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();

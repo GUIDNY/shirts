@@ -54,12 +54,11 @@ export default function PosterDesignPage() {
     setError(null);
     try {
       const formData = new FormData();
-      // Posters are full-bleed — the same uploaded file serves as the
-      // design, mockup, and print file, so we send it three times to reuse
-      // the existing upload endpoint's contract unchanged.
+      // Posters are full-bleed — the design file itself doubles as the
+      // mockup and print file, so we upload it once and the API reuses
+      // that URL for all three (sending it 3x would triple the payload
+      // and can exceed the platform's request body size limit).
       formData.append("design_front", file);
-      formData.append("mockup_front", file);
-      formData.append("print_front", file);
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
