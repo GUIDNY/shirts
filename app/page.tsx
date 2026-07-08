@@ -261,6 +261,19 @@ export default function HomePage() {
                 <p className="text-sm text-neutral-500">מ-379 ₪</p>
               </div>
             </Link>
+
+            <Link
+              href="/design/mug"
+              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
+            >
+              <div className="relative aspect-[3/4] bg-gradient-to-br from-sky-50 to-cyan-100 flex items-center justify-center">
+                <span className="text-5xl group-hover:scale-[1.05] transition-transform">☕</span>
+              </div>
+              <div className="p-3">
+                <p className="font-medium text-neutral-900 text-sm">ספל בעיצוב אישי</p>
+                <p className="text-sm text-neutral-500">מ-249 ₪</p>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

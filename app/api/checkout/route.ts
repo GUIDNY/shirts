@@ -7,6 +7,7 @@ import {
   ALL_COLORS,
   CANVAS_PRICE,
   COLOR_LABELS,
+  MUG_PRICE,
   POSTER_PAPER_LABELS,
   POSTER_PRICE,
   PRODUCT_LABELS,
@@ -160,6 +161,38 @@ export async function POST(request: Request) {
       back_print_file_url: null,
       price: price.total,
     };
+  } else if (item.category === "mug") {
+    if (!isBlobUrl(item.imageUrl) || !isBlobUrl(item.printFileUrl)) {
+      return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
+    }
+
+    price = calculatePrice(item.quantity, MUG_PRICE);
+    description = `ספל · כמות ${item.quantity}`;
+    newOrderFields = {
+      customer_name: customer.customerName,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+      city: customer.city,
+      zip: customer.zip,
+      notes: customer.notes || null,
+      product_category: "mug",
+      product_type: "men",
+      size: "M",
+      color: "white",
+      poster_paper: null,
+      poster_orientation: null,
+      tote_color: null,
+      canvas_orientation: null,
+      quantity: item.quantity,
+      image_url: item.imageUrl,
+      mockup_url: item.imageUrl,
+      print_file_url: item.printFileUrl,
+      back_image_url: null,
+      back_mockup_url: null,
+      back_print_file_url: null,
+      price: price.total,
+    };
   } else {
     if (
       !VALID_PRODUCT_TYPES.includes(item.productType) ||
@@ -260,7 +293,9 @@ export async function POST(request: Request) {
                       ? "הזמנת טוט בג בעיצוב אישי"
                       : item.category === "canvas"
                         ? "הזמנת קנבס בעיצוב אישי"
-                        : "הזמנת חולצה בעיצוב אישי",
+                        : item.category === "mug"
+                          ? "הזמנת ספל בעיצוב אישי"
+                          : "הזמנת חולצה בעיצוב אישי",
                 description,
               },
             },

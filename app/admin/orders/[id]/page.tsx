@@ -85,6 +85,11 @@ export default async function AdminOrderDetailPage({
                 <dt className="text-neutral-500">מוצר</dt>
                 <dd>קנבס 50×50 ס&quot;מ</dd>
               </>
+            ) : order.product_category === "mug" ? (
+              <>
+                <dt className="text-neutral-500">מוצר</dt>
+                <dd>ספל קרמיקה לבן 11oz</dd>
+              </>
             ) : (
               <>
                 <dt className="text-neutral-500">מוצר</dt>

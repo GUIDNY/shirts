@@ -50,7 +50,9 @@ export default async function AdminOrdersPage() {
                         ? `טוט בג · ${TOTE_COLOR_LABELS[order.tote_color as ToteColor]}`
                         : order.product_category === "canvas"
                           ? "קנבס 50×50"
-                          : `${PRODUCT_LABELS[order.product_type]} · ${COLOR_LABELS[order.color]} · ${order.size}`}
+                          : order.product_category === "mug"
+                            ? "ספל 11oz"
+                            : `${PRODUCT_LABELS[order.product_type]} · ${COLOR_LABELS[order.color]} · ${order.size}`}
                   </td>
                   <td className="px-4 py-3">{order.quantity}</td>
                   <td className="px-4 py-3">{order.price} ₪</td>

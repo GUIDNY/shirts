@@ -106,6 +106,14 @@ export function getCanvasProductUid(orientation: CanvasOrientation): string {
   return `canvas_product_cf_20x20-inch_cm_canvas_cfrm_wood-fsc-2-cm_cl_4-0_${orientation}`;
 }
 
+/**
+ * Fixed 11oz white ceramic mug, catalog "mugs" — verified against the
+ * Gelato Product API AND a real draft order on 2026-07-08 (file type
+ * "default", cost 26.62₪ + 99.88₪ IL shipping, matching the user's
+ * dashboard figure exactly).
+ */
+export const MUG_PRODUCT_UID = "mug_product_msz_11-oz_mmat_ceramic-white_cl_4-0";
+
 export interface GelatoOrderResponse {
   id: string;
   orderReferenceId: string;
@@ -150,6 +158,9 @@ export async function createGelatoOrder(
   } else if (order.product_category === "canvas") {
     productUid = getCanvasProductUid(order.canvas_orientation as CanvasOrientation);
     // Canvas is full-bleed single-sided — file type "default".
+    files.push({ type: "default", url: order.print_file_url || order.image_url });
+  } else if (order.product_category === "mug") {
+    productUid = MUG_PRODUCT_UID;
     files.push({ type: "default", url: order.print_file_url || order.image_url });
   } else {
     const hasBackPrint = Boolean(order.back_image_url);

@@ -57,7 +57,7 @@ create index if not exists orders_gelato_order_id_idx on orders (gelato_order_id
 -- with placeholder values on these rows (never read) so the existing
 -- NOT NULL constraints don't need to change for the apparel path.
 alter table orders add column if not exists product_category text not null default 'apparel'
-  check (product_category in ('apparel', 'poster', 'tote', 'canvas'));
+  check (product_category in ('apparel', 'poster', 'tote', 'canvas', 'mug'));
 alter table orders add column if not exists poster_size text;
 alter table orders add column if not exists poster_paper text;
 alter table orders add column if not exists poster_orientation text;
@@ -69,4 +69,4 @@ alter table orders add column if not exists canvas_orientation text;
 -- migration, just a new value here.
 alter table orders drop constraint if exists orders_product_category_check;
 alter table orders add constraint orders_product_category_check
-  check (product_category in ('apparel', 'poster', 'tote', 'canvas'));
+  check (product_category in ('apparel', 'poster', 'tote', 'canvas', 'mug'));

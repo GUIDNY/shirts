@@ -46,7 +46,9 @@ export default function CartPage() {
                     ? "תצוגה מקדימה של הטוט בג"
                     : item.category === "canvas"
                       ? "תצוגה מקדימה של הקנבס"
-                      : "תצוגה מקדימה של החולצה"
+                      : item.category === "mug"
+                        ? "תצוגה מקדימה של הספל"
+                        : "תצוגה מקדימה של החולצה"
               }
               fill
               className="object-contain"
@@ -87,6 +89,14 @@ export default function CartPage() {
               <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
                 <dt className="text-neutral-500">גודל</dt>
                 <dd>50×50 ס&quot;מ</dd>
+              </dl>
+            </>
+          ) : item.category === "mug" ? (
+            <>
+              <h2 className="text-lg font-semibold">ספל בעיצוב אישי</h2>
+              <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
+                <dt className="text-neutral-500">מוצר</dt>
+                <dd>קרמיקה לבן 11oz</dd>
               </dl>
             </>
           ) : (

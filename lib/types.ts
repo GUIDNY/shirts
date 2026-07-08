@@ -1,7 +1,7 @@
 export type ProductType = "men" | "women" | "kids";
 
 /** Top-level product line. "apparel" is the existing t-shirt flow. */
-export type ProductCategory = "apparel" | "poster" | "tote" | "canvas";
+export type ProductCategory = "apparel" | "poster" | "tote" | "canvas" | "mug";
 
 export type PosterPaper = "glossy" | "matte";
 export type PosterOrientation = "ver" | "hor";
@@ -66,6 +66,17 @@ export type CanvasOrientation = "ver" | "hor";
  * rather than the table, and priced accordingly as a clear premium item.
  */
 export const CANVAS_PRICE = 379;
+
+/**
+ * Single fixed variant (11oz white ceramic mug), catalog "mugs", productUid
+ * `mug_product_msz_11-oz_mmat_ceramic-white_cl_4-0` — verified against the
+ * Gelato Product API AND a real draft order on 2026-07-08 (file type
+ * "default"), cost 26.62₪ + 99.88₪ IL shipping = 126.50₪, matching the
+ * user's own dashboard figure exactly. Their table rated mugs "not worth
+ * it" given IL shipping is ~4x the item cost, but asked for it to be built
+ * anyway and priced as premium rather than skipped.
+ */
+export const MUG_PRICE = 249;
 
 export type ShirtColor = "white" | "black" | "blue" | "red" | "royal" | "pink";
 
@@ -187,7 +198,16 @@ export interface CanvasCartItem {
   unitPrice: number;
 }
 
-export type CartItem = ApparelCartItem | PosterCartItem | ToteCartItem | CanvasCartItem;
+export interface MugCartItem {
+  category: "mug";
+  quantity: number;
+  /** Mug wrap print is full-bleed — the uploaded file itself is the print file. */
+  imageUrl: string;
+  printFileUrl: string;
+  unitPrice: number;
+}
+
+export type CartItem = ApparelCartItem | PosterCartItem | ToteCartItem | CanvasCartItem | MugCartItem;
 
 export interface CustomerDetails {
   customerName: string;
