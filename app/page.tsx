@@ -246,6 +246,21 @@ export default function HomePage() {
                 <p className="text-sm text-neutral-500">מ-149 ₪</p>
               </div>
             </Link>
+
+            <Link
+              href="/design/canvas"
+              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
+            >
+              <div className="relative aspect-[3/4] bg-gradient-to-br from-stone-100 to-neutral-200 flex items-center justify-center">
+                <div className="w-[55%] aspect-square bg-white ring-4 ring-[#3a2a1d] shadow-lg group-hover:scale-[1.03] transition-transform flex items-center justify-center">
+                  <span className="text-3xl">🎨</span>
+                </div>
+              </div>
+              <div className="p-3">
+                <p className="font-medium text-neutral-900 text-sm">קנבס בעיצוב אישי</p>
+                <p className="text-sm text-neutral-500">מ-379 ₪</p>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

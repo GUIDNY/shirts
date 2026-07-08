@@ -1,5 +1,14 @@
 import "server-only";
-import type { OrderRecord, PosterOrientation, PosterPaper, ProductType, ShirtColor, Size, ToteColor } from "./types";
+import type {
+  CanvasOrientation,
+  OrderRecord,
+  PosterOrientation,
+  PosterPaper,
+  ProductType,
+  ShirtColor,
+  Size,
+  ToteColor,
+} from "./types";
 
 const GELATO_API_BASE = "https://order.gelatoapis.com";
 const GELATO_API_KEY = process.env.GELATO_API_KEY;
@@ -88,6 +97,15 @@ export function getToteProductUid(color: ToteColor): string {
   return `bag_product_bsc_tote-bag_bqa_clc_bsi_std-t_bco_${color}_bpr_4-0`;
 }
 
+/**
+ * Fixed 50x50cm (20x20") canvas, 2cm wood frame, both orientations
+ * verified against the Gelato Product API AND a real draft order on
+ * 2026-07-08 (file type "default", cost 109.43₪ + 154.76₪ IL shipping).
+ */
+export function getCanvasProductUid(orientation: CanvasOrientation): string {
+  return `canvas_product_cf_20x20-inch_cm_canvas_cfrm_wood-fsc-2-cm_cl_4-0_${orientation}`;
+}
+
 export interface GelatoOrderResponse {
   id: string;
   orderReferenceId: string;
@@ -129,6 +147,10 @@ export async function createGelatoOrder(
   } else if (order.product_category === "tote") {
     productUid = getToteProductUid(order.tote_color as ToteColor);
     files.push({ type: GELATO_PRINT_AREA, url: order.print_file_url || order.image_url });
+  } else if (order.product_category === "canvas") {
+    productUid = getCanvasProductUid(order.canvas_orientation as CanvasOrientation);
+    // Canvas is full-bleed single-sided — file type "default".
+    files.push({ type: "default", url: order.print_file_url || order.image_url });
   } else {
     const hasBackPrint = Boolean(order.back_image_url);
     productUid = getProductUid(order.product_type, order.color, order.size, hasBackPrint);

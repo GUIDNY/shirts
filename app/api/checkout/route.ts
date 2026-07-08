@@ -5,6 +5,7 @@ import { getStripe } from "@/lib/stripe";
 import { calculatePrice } from "@/lib/pricing";
 import {
   ALL_COLORS,
+  CANVAS_PRICE,
   COLOR_LABELS,
   POSTER_PAPER_LABELS,
   POSTER_PRICE,
@@ -22,6 +23,7 @@ const VALID_PRODUCT_TYPES = ["men", "women", "kids"];
 const VALID_POSTER_PAPERS = ["glossy", "matte"];
 const VALID_POSTER_ORIENTATIONS = ["ver", "hor"];
 const VALID_TOTE_COLORS = ["natural", "black", "navy", "white"];
+const VALID_CANVAS_ORIENTATIONS = ["ver", "hor"];
 
 function isBlobUrl(url: unknown): boolean {
   if (typeof url !== "string") return false;
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
       poster_paper: item.paper,
       poster_orientation: item.orientation,
       tote_color: null,
+      canvas_orientation: null,
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.imageUrl,
@@ -115,6 +118,39 @@ export async function POST(request: Request) {
       poster_paper: null,
       poster_orientation: null,
       tote_color: item.color as ToteColor,
+      canvas_orientation: null,
+      quantity: item.quantity,
+      image_url: item.imageUrl,
+      mockup_url: item.imageUrl,
+      print_file_url: item.printFileUrl,
+      back_image_url: null,
+      back_mockup_url: null,
+      back_print_file_url: null,
+      price: price.total,
+    };
+  } else if (item.category === "canvas") {
+    if (!VALID_CANVAS_ORIENTATIONS.includes(item.orientation) || !isBlobUrl(item.imageUrl) || !isBlobUrl(item.printFileUrl)) {
+      return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
+    }
+
+    price = calculatePrice(item.quantity, CANVAS_PRICE);
+    description = `קנבס 50×50 · כמות ${item.quantity}`;
+    newOrderFields = {
+      customer_name: customer.customerName,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+      city: customer.city,
+      zip: customer.zip,
+      notes: customer.notes || null,
+      product_category: "canvas",
+      product_type: "men",
+      size: "M",
+      color: "white",
+      poster_paper: null,
+      poster_orientation: null,
+      tote_color: null,
+      canvas_orientation: item.orientation,
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.imageUrl,
@@ -167,6 +203,7 @@ export async function POST(request: Request) {
       poster_paper: null,
       poster_orientation: null,
       tote_color: null,
+      canvas_orientation: null,
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.mockupUrl,
@@ -221,7 +258,9 @@ export async function POST(request: Request) {
                     ? "הזמנת פוסטר בעיצוב אישי"
                     : item.category === "tote"
                       ? "הזמנת טוט בג בעיצוב אישי"
-                      : "הזמנת חולצה בעיצוב אישי",
+                      : item.category === "canvas"
+                        ? "הזמנת קנבס בעיצוב אישי"
+                        : "הזמנת חולצה בעיצוב אישי",
                 description,
               },
             },

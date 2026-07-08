@@ -29,7 +29,9 @@ export async function sendOrderConfirmationEmail(order: OrderRecord) {
               ? `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>פוסטר 50×70 · ${POSTER_PAPER_LABELS[order.poster_paper as PosterPaper]}</td></tr>`
               : order.product_category === "tote"
                 ? `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>טוט בג · ${TOTE_COLOR_LABELS[order.tote_color as ToteColor]}</td></tr>`
-                : `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>${PRODUCT_LABELS[order.product_type]}</td></tr>
+                : order.product_category === "canvas"
+                  ? `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>קנבס 50×50</td></tr>`
+                  : `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>${PRODUCT_LABELS[order.product_type]}</td></tr>
           <tr><td style="padding: 4px 0; color: #666;">צבע</td><td>${COLOR_LABELS[order.color]}</td></tr>
           <tr><td style="padding: 4px 0; color: #666;">מידה</td><td>${order.size}</td></tr>`
           }

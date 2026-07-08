@@ -80,6 +80,11 @@ export default async function AdminOrderDetailPage({
                 <dt className="text-neutral-500">צבע</dt>
                 <dd>{TOTE_COLOR_LABELS[order.tote_color as ToteColor]}</dd>
               </>
+            ) : order.product_category === "canvas" ? (
+              <>
+                <dt className="text-neutral-500">מוצר</dt>
+                <dd>קנבס 50×50 ס&quot;מ</dd>
+              </>
             ) : (
               <>
                 <dt className="text-neutral-500">מוצר</dt>

@@ -1,7 +1,7 @@
 export type ProductType = "men" | "women" | "kids";
 
 /** Top-level product line. "apparel" is the existing t-shirt flow. */
-export type ProductCategory = "apparel" | "poster" | "tote";
+export type ProductCategory = "apparel" | "poster" | "tote" | "canvas";
 
 export type PosterPaper = "glossy" | "matte";
 export type PosterOrientation = "ver" | "hor";
@@ -50,6 +50,22 @@ export const TOTE_COLOR_HEX: Record<ToteColor, string> = {
  * user's own dashboard figures exactly).
  */
 export const TOTE_PRICE = 149;
+
+export type CanvasOrientation = "ver" | "hor";
+
+/**
+ * Single fixed size (50x50cm / 20x20"), catalog "canvas", productUid
+ * `canvas_product_cf_20x20-inch_cm_canvas_cfrm_wood-fsc-2-cm_cl_4-0_{ver|hor}`
+ * — verified against the Gelato Product API AND a real draft order on
+ * 2026-07-08. The catalog has several parallel canvas product lines with
+ * very different shipping weights (framed vs. simplified, 2/3/4cm frame);
+ * this real order came back at 109.43₪ production + 154.76₪ DHL express to
+ * IL = 264.19₪ total — noticeably higher than the user's own dashboard
+ * figure for "Canvas 20x20" (106.28₪), most likely because their number
+ * was for a different sub-variant. Went with this verified live number
+ * rather than the table, and priced accordingly as a clear premium item.
+ */
+export const CANVAS_PRICE = 379;
 
 export type ShirtColor = "white" | "black" | "blue" | "red" | "royal" | "pink";
 
@@ -161,7 +177,17 @@ export interface ToteCartItem {
   unitPrice: number;
 }
 
-export type CartItem = ApparelCartItem | PosterCartItem | ToteCartItem;
+export interface CanvasCartItem {
+  category: "canvas";
+  orientation: CanvasOrientation;
+  quantity: number;
+  /** Canvas prints are full-bleed — the uploaded file itself is the print file. */
+  imageUrl: string;
+  printFileUrl: string;
+  unitPrice: number;
+}
+
+export type CartItem = ApparelCartItem | PosterCartItem | ToteCartItem | CanvasCartItem;
 
 export interface CustomerDetails {
   customerName: string;
@@ -190,6 +216,7 @@ export interface OrderRecord {
   poster_paper: PosterPaper | null;
   poster_orientation: PosterOrientation | null;
   tote_color: ToteColor | null;
+  canvas_orientation: CanvasOrientation | null;
   quantity: number;
   image_url: string;
   mockup_url: string;

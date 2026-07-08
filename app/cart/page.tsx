@@ -44,7 +44,9 @@ export default function CartPage() {
                   ? "תצוגה מקדימה של הפוסטר"
                   : item.category === "tote"
                     ? "תצוגה מקדימה של הטוט בג"
-                    : "תצוגה מקדימה של החולצה"
+                    : item.category === "canvas"
+                      ? "תצוגה מקדימה של הקנבס"
+                      : "תצוגה מקדימה של החולצה"
               }
               fill
               className="object-contain"
@@ -77,6 +79,14 @@ export default function CartPage() {
                 <dd>{TOTE_COLOR_LABELS[item.color]}</dd>
                 <dt className="text-neutral-500">גודל</dt>
                 <dd>38×42 ס&quot;מ</dd>
+              </dl>
+            </>
+          ) : item.category === "canvas" ? (
+            <>
+              <h2 className="text-lg font-semibold">קנבס בעיצוב אישי</h2>
+              <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
+                <dt className="text-neutral-500">גודל</dt>
+                <dd>50×50 ס&quot;מ</dd>
               </dl>
             </>
           ) : (
