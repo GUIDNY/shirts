@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
 import { TOTE_COLOR_HEX, TOTE_COLOR_LABELS, TOTE_PRICE, type ToteColor } from "@/lib/types";
@@ -47,22 +48,21 @@ export default function ToteDesignPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const formData = new FormData();
-      // Uploaded once — the API reuses the same URL for mockup/print
-      // (see /api/upload; sending 3 copies would risk the platform's
-      // request body size limit for a normal-sized photo).
-      formData.append("design_front", file);
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "העלאה נכשלה");
+      // Uploaded directly browser-to-Blob (not through a route handler)
+      // so a real phone photo's size is never limited by the platform's
+      // serverless function body cap.
+      const ext = file.type === "image/png" ? "png" : "jpg";
+      const blob = await upload(`designs/${crypto.randomUUID()}-front.${ext}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob-upload",
+      });
 
       setItem({
         category: "tote",
         color,
         quantity,
-        imageUrl: data.imageUrl,
-        printFileUrl: data.printFileUrl,
+        imageUrl: blob.url,
+        printFileUrl: blob.url,
         unitPrice: TOTE_PRICE,
       });
 

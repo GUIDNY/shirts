@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
 import { FLAT_ASSETS, STAGE_WIDTH, STAGE_HEIGHT } from "@/lib/studio";
@@ -166,28 +167,44 @@ export default function DesignPage() {
 
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("design_front", designs.front.file);
-      const frontMockupBlob = await (await fetch(frontCanvasRef.current.exportMockup())).blob();
-      formData.append("mockup_front", frontMockupBlob, "mockup-front.png");
-      const frontPrintBlob = await (await fetch(frontCanvasRef.current.exportPrintFile())).blob();
-      formData.append("print_front", frontPrintBlob, "print-front.png");
+      // Each file is uploaded directly browser-to-Blob (not through a
+      // route handler), so a real original photo's size is never limited
+      // by the platform's serverless function body cap — this used to be
+      // one multipart POST bundling the raw design + rendered mockup +
+      // 10x-scaled print file together, which could exceed that limit.
+      const id = crypto.randomUUID();
+      const uploadOne = (pathname: string, data: File | Blob) =>
+        upload(pathname, data, { access: "public", handleUploadUrl: "/api/blob-upload" }).then((b) => b.url);
 
-      if (designs.back.file && backCanvasRef.current) {
-        formData.append("design_back", designs.back.file);
-        const backMockupBlob = await (await fetch(backCanvasRef.current.exportMockup())).blob();
-        formData.append("mockup_back", backMockupBlob, "mockup-back.png");
-        const backPrintBlob = await (await fetch(backCanvasRef.current.exportPrintFile())).blob();
-        formData.append("print_back", backPrintBlob, "print-back.png");
+      const dataUrlToBlob = async (dataUrl: string) => (await fetch(dataUrl)).blob();
+
+      const frontExt = designs.front.file.type === "image/png" ? "png" : "jpg";
+      const uploads: Promise<string>[] = [
+        uploadOne(`designs/${id}-front.${frontExt}`, designs.front.file),
+        dataUrlToBlob(frontCanvasRef.current.exportMockup()).then((blob) =>
+          uploadOne(`mockups/${id}-front.png`, blob)
+        ),
+        dataUrlToBlob(frontCanvasRef.current.exportPrintFile()).then((blob) =>
+          uploadOne(`prints/${id}-front.png`, blob)
+        ),
+      ];
+
+      const hasBack = Boolean(designs.back.file && backCanvasRef.current);
+      if (hasBack) {
+        const backExt = designs.back.file!.type === "image/png" ? "png" : "jpg";
+        uploads.push(
+          uploadOne(`designs/${id}-back.${backExt}`, designs.back.file!),
+          dataUrlToBlob(backCanvasRef.current!.exportMockup()).then((blob) =>
+            uploadOne(`mockups/${id}-back.png`, blob)
+          ),
+          dataUrlToBlob(backCanvasRef.current!.exportPrintFile()).then((blob) =>
+            uploadOne(`prints/${id}-back.png`, blob)
+          )
+        );
       }
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "העלאה נכשלה, נסו שוב");
-        return;
-      }
+      const [imageUrl, mockupUrl, printFileUrl, backImageUrl, backMockupUrl, backPrintFileUrl] =
+        await Promise.all(uploads);
 
       setItem({
         category: "apparel",
@@ -195,13 +212,13 @@ export default function DesignPage() {
         color,
         size,
         quantity,
-        imageUrl: data.imageUrl,
-        mockupUrl: data.mockupUrl,
-        printFileUrl: data.printFileUrl,
+        imageUrl,
+        mockupUrl,
+        printFileUrl,
         transform: designs.front.transform as DesignTransform,
-        backImageUrl: data.backImageUrl || null,
-        backMockupUrl: data.backMockupUrl || null,
-        backPrintFileUrl: data.backPrintFileUrl || null,
+        backImageUrl: backImageUrl || null,
+        backMockupUrl: backMockupUrl || null,
+        backPrintFileUrl: backPrintFileUrl || null,
         backTransform: designs.back.transform || null,
       });
 

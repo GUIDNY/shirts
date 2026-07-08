@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
 import { POSTER_PAPER_LABELS, POSTER_PRICE, type PosterOrientation, type PosterPaper } from "@/lib/types";
@@ -53,24 +54,23 @@ export default function PosterDesignPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const formData = new FormData();
       // Posters are full-bleed — the design file itself doubles as the
-      // mockup and print file, so we upload it once and the API reuses
-      // that URL for all three (sending it 3x would triple the payload
-      // and can exceed the platform's request body size limit).
-      formData.append("design_front", file);
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "העלאה נכשלה");
+      // mockup and print file. Uploaded directly browser-to-Blob (not
+      // through a route handler) so a real phone photo's size is never
+      // limited by the platform's serverless function body cap.
+      const ext = file.type === "image/png" ? "png" : "jpg";
+      const blob = await upload(`designs/${crypto.randomUUID()}-front.${ext}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob-upload",
+      });
 
       setItem({
         category: "poster",
         paper,
         orientation,
         quantity,
-        imageUrl: data.imageUrl,
-        printFileUrl: data.printFileUrl,
+        imageUrl: blob.url,
+        printFileUrl: blob.url,
         unitPrice: POSTER_PRICE[paper],
       });
 
