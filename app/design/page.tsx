@@ -206,8 +206,8 @@ export default function DesignPage() {
       });
 
       router.push("/cart");
-    } catch {
-      setError("משהו השתבש, נסו שוב");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "משהו השתבש, נסו שוב");
     } finally {
       setSubmitting(false);
     }
