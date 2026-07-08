@@ -52,3 +52,12 @@ create table if not exists orders (
 
 create index if not exists orders_created_at_idx on orders (created_at desc);
 create index if not exists orders_gelato_order_id_idx on orders (gelato_order_id);
+
+-- Non-apparel products (posters, etc). product_type/size/color stay filled
+-- with placeholder values on these rows (never read) so the existing
+-- NOT NULL constraints don't need to change for the apparel path.
+alter table orders add column if not exists product_category text not null default 'apparel'
+  check (product_category in ('apparel', 'poster'));
+alter table orders add column if not exists poster_size text;
+alter table orders add column if not exists poster_paper text;
+alter table orders add column if not exists poster_orientation text;

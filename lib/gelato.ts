@@ -1,5 +1,5 @@
 import "server-only";
-import type { OrderRecord, ProductType, ShirtColor, Size } from "./types";
+import type { OrderRecord, PosterOrientation, PosterPaper, ProductType, ShirtColor, Size } from "./types";
 
 const GELATO_API_BASE = "https://order.gelatoapis.com";
 const GELATO_API_KEY = process.env.GELATO_API_KEY;
@@ -65,6 +65,19 @@ export function getProductUid(
   return `apparel_product_gca_t-shirt_gsc_crewneck_gcu_${cut}_gqa_classic_gsi_${gelatoSize}_gco_${gelatoColor}_gpr_${gpr}`;
 }
 
+const GELATO_POSTER_PAPER: Record<PosterPaper, string> = {
+  glossy: "170-gsm-65lb-coated-silk",
+  matte: "170-gsm-65lb-uncoated",
+};
+
+/**
+ * Fixed 50x70cm poster, both orientations and both paper stocks verified
+ * against the Gelato Product API (catalog "posters") on 2026-07-08.
+ */
+export function getPosterProductUid(paper: PosterPaper, orientation: PosterOrientation): string {
+  return `flat_500x700-mm-20x28-inch_${GELATO_POSTER_PAPER[paper]}_4-0_${orientation}`;
+}
+
 export interface GelatoOrderResponse {
   id: string;
   orderReferenceId: string;
@@ -93,19 +106,29 @@ export async function createGelatoOrder(
     throw new Error("Refusing to send an unpaid order to Gelato production.");
   }
 
-  const hasBackPrint = Boolean(order.back_image_url);
-  const productUid = getProductUid(order.product_type, order.color, order.size, hasBackPrint);
+  let productUid: string;
+  const files: { type: string; url: string }[] = [];
 
-  // Send the pre-composited print file (artwork already positioned/scaled/
-  // rotated exactly as the customer placed it) — never the raw upload,
-  // which Gelato would just center on its own with no knowledge of our
-  // editor's transform. Falls back to the raw file only for pre-migration
-  // orders that don't have a print file on record.
-  const files: { type: string; url: string }[] = [
-    { type: GELATO_PRINT_AREA, url: order.print_file_url || order.image_url },
-  ];
-  if (hasBackPrint) {
-    files.push({ type: "back", url: order.back_print_file_url || (order.back_image_url as string) });
+  if (order.product_category === "poster") {
+    productUid = getPosterProductUid(
+      order.poster_paper as PosterPaper,
+      order.poster_orientation as PosterOrientation
+    );
+    // Posters are full-bleed single-sided prints — file type "default".
+    files.push({ type: "default", url: order.print_file_url || order.image_url });
+  } else {
+    const hasBackPrint = Boolean(order.back_image_url);
+    productUid = getProductUid(order.product_type, order.color, order.size, hasBackPrint);
+
+    // Send the pre-composited print file (artwork already positioned/scaled/
+    // rotated exactly as the customer placed it) — never the raw upload,
+    // which Gelato would just center on its own with no knowledge of our
+    // editor's transform. Falls back to the raw file only for pre-migration
+    // orders that don't have a print file on record.
+    files.push({ type: GELATO_PRINT_AREA, url: order.print_file_url || order.image_url });
+    if (hasBackPrint) {
+      files.push({ type: "back", url: order.back_print_file_url || (order.back_image_url as string) });
+    }
   }
 
   const body = {

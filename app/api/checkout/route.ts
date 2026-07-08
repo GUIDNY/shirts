@@ -6,13 +6,18 @@ import { calculatePrice } from "@/lib/pricing";
 import {
   ALL_COLORS,
   COLOR_LABELS,
+  POSTER_PAPER_LABELS,
+  POSTER_PRICE,
   PRODUCT_LABELS,
   SIZES,
   type CartItem,
   type CustomerDetails,
+  type PosterPaper,
 } from "@/lib/types";
 
 const VALID_PRODUCT_TYPES = ["men", "women", "kids"];
+const VALID_POSTER_PAPERS = ["glossy", "matte"];
+const VALID_POSTER_ORIENTATIONS = ["ver", "hor"];
 
 function isBlobUrl(url: unknown): boolean {
   if (typeof url !== "string") return false;
@@ -29,33 +34,8 @@ export async function POST(request: Request) {
   const item = body.item as CartItem;
   const customer = body.customer as CustomerDetails;
 
-  if (
-    !item ||
-    !customer ||
-    !VALID_PRODUCT_TYPES.includes(item.productType) ||
-    !ALL_COLORS.includes(item.color) ||
-    !SIZES.includes(item.size) ||
-    !Number.isInteger(item.quantity) ||
-    item.quantity < 1 ||
-    !isBlobUrl(item.imageUrl) ||
-    !isBlobUrl(item.mockupUrl) ||
-    !isBlobUrl(item.printFileUrl)
-  ) {
+  if (!item || !customer || !Number.isInteger(item.quantity) || item.quantity < 1) {
     return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
-  }
-
-  const hasBack = Boolean(item.backImageUrl || item.backMockupUrl);
-  if (
-    hasBack &&
-    (!isBlobUrl(item.backImageUrl ?? "") ||
-      !isBlobUrl(item.backMockupUrl ?? "") ||
-      !isBlobUrl(item.backPrintFileUrl ?? ""))
-  ) {
-    return NextResponse.json({ error: "נתוני הדפסת הגב אינם תקינים" }, { status: 400 });
-  }
-
-  if (item.productType === "kids" && item.size === "XXL") {
-    return NextResponse.json({ error: "חולצות ילדים אינן זמינות במידה XXL" }, { status: 400 });
   }
 
   if (
@@ -69,11 +49,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "נא למלא את כל פרטי המשלוח" }, { status: 400 });
   }
 
-  const price = calculatePrice(item.quantity);
+  let price;
+  let description: string;
+  let newOrderFields: Parameters<typeof insertOrder>[0];
 
-  let order;
-  try {
-    order = await insertOrder({
+  if (item.category === "poster") {
+    if (
+      !VALID_POSTER_PAPERS.includes(item.paper) ||
+      !VALID_POSTER_ORIENTATIONS.includes(item.orientation) ||
+      !isBlobUrl(item.imageUrl) ||
+      !isBlobUrl(item.printFileUrl)
+    ) {
+      return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
+    }
+
+    price = calculatePrice(item.quantity, POSTER_PRICE[item.paper as PosterPaper]);
+    description = `פוסטר · ${POSTER_PAPER_LABELS[item.paper]} · כמות ${item.quantity}`;
+    newOrderFields = {
       customer_name: customer.customerName,
       phone: customer.phone,
       email: customer.email,
@@ -81,9 +73,63 @@ export async function POST(request: Request) {
       city: customer.city,
       zip: customer.zip,
       notes: customer.notes || null,
+      product_category: "poster",
+      product_type: "men",
+      size: "M",
+      color: "white",
+      poster_paper: item.paper,
+      poster_orientation: item.orientation,
+      quantity: item.quantity,
+      image_url: item.imageUrl,
+      mockup_url: item.imageUrl,
+      print_file_url: item.printFileUrl,
+      back_image_url: null,
+      back_mockup_url: null,
+      back_print_file_url: null,
+      price: price.total,
+    };
+  } else {
+    if (
+      !VALID_PRODUCT_TYPES.includes(item.productType) ||
+      !ALL_COLORS.includes(item.color) ||
+      !SIZES.includes(item.size) ||
+      !isBlobUrl(item.imageUrl) ||
+      !isBlobUrl(item.mockupUrl) ||
+      !isBlobUrl(item.printFileUrl)
+    ) {
+      return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
+    }
+
+    const hasBack = Boolean(item.backImageUrl || item.backMockupUrl);
+    if (
+      hasBack &&
+      (!isBlobUrl(item.backImageUrl ?? "") ||
+        !isBlobUrl(item.backMockupUrl ?? "") ||
+        !isBlobUrl(item.backPrintFileUrl ?? ""))
+    ) {
+      return NextResponse.json({ error: "נתוני הדפסת הגב אינם תקינים" }, { status: 400 });
+    }
+
+    if (item.productType === "kids" && item.size === "XXL") {
+      return NextResponse.json({ error: "חולצות ילדים אינן זמינות במידה XXL" }, { status: 400 });
+    }
+
+    price = calculatePrice(item.quantity);
+    description = `${PRODUCT_LABELS[item.productType]} · ${COLOR_LABELS[item.color]} · מידה ${item.size} · כמות ${item.quantity}`;
+    newOrderFields = {
+      customer_name: customer.customerName,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+      city: customer.city,
+      zip: customer.zip,
+      notes: customer.notes || null,
+      product_category: "apparel",
       product_type: item.productType,
       size: item.size,
       color: item.color,
+      poster_paper: null,
+      poster_orientation: null,
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.mockupUrl,
@@ -92,7 +138,12 @@ export async function POST(request: Request) {
       back_mockup_url: hasBack ? (item.backMockupUrl as string) : null,
       back_print_file_url: hasBack ? (item.backPrintFileUrl as string) : null,
       price: price.total,
-    });
+    };
+  }
+
+  let order;
+  try {
+    order = await insertOrder(newOrderFields);
   } catch (err) {
     return NextResponse.json(
       { error: `יצירת ההזמנה נכשלה: ${err instanceof Error ? err.message : "שגיאה לא ידועה"}` },
@@ -114,9 +165,6 @@ export async function POST(request: Request) {
   // the order immediately (no-payment mode until Stripe keys are added).
   if (process.env.STRIPE_SECRET_KEY) {
     const origin = request.headers.get("origin") || new URL(request.url).origin;
-    const description = `${PRODUCT_LABELS[item.productType as keyof typeof PRODUCT_LABELS]} · ${
-      COLOR_LABELS[item.color as keyof typeof COLOR_LABELS]
-    } · מידה ${item.size} · כמות ${item.quantity}`;
 
     try {
       const session = await getStripe().checkout.sessions.create({
@@ -131,7 +179,7 @@ export async function POST(request: Request) {
               currency: "ils",
               unit_amount: Math.round(price.total * 100),
               product_data: {
-                name: "הזמנת חולצה בעיצוב אישי",
+                name: item.category === "poster" ? "הזמנת פוסטר בעיצוב אישי" : "הזמנת חולצה בעיצוב אישי",
                 description,
               },
             },

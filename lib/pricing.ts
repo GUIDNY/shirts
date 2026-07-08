@@ -17,10 +17,10 @@ export interface PriceBreakdown {
   total: number;
 }
 
-export function calculatePrice(quantity: number): PriceBreakdown {
+export function calculatePrice(quantity: number, unitPrice: number = UNIT_PRICE): PriceBreakdown {
   const discountRate = quantityDiscountRate(quantity);
-  const subtotal = Math.round(UNIT_PRICE * quantity * (1 - discountRate) * 100) / 100;
+  const subtotal = Math.round(unitPrice * quantity * (1 - discountRate) * 100) / 100;
   const shipping = quantity >= FREE_SHIPPING_MIN_QTY ? 0 : SHIPPING_PRICE;
   const total = Math.round((subtotal + shipping) * 100) / 100;
-  return { unitPrice: UNIT_PRICE, quantity, discountRate, subtotal, shipping, total };
+  return { unitPrice, quantity, discountRate, subtotal, shipping, total };
 }

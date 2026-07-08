@@ -219,11 +219,20 @@ export default function HomePage() {
               </Link>
             ))}
 
-            <div className="rounded-xl border border-dashed border-neutral-300 flex flex-col items-center justify-center aspect-[3/4] text-center p-4 bg-neutral-50">
-              <span className="text-2xl mb-2">🧥</span>
-              <p className="font-medium text-neutral-700 text-sm">קפוצ&apos;ונים</p>
-              <p className="text-xs text-neutral-400 mt-1">בקרוב</p>
-            </div>
+            <Link
+              href="/design/poster"
+              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
+            >
+              <div className="relative aspect-[3/4] bg-gradient-to-br from-violet-100 to-blue-100 flex items-center justify-center">
+                <div className="w-[55%] aspect-[5/7] bg-white shadow-lg group-hover:scale-[1.03] transition-transform flex items-center justify-center">
+                  <span className="text-3xl">🖼️</span>
+                </div>
+              </div>
+              <div className="p-3">
+                <p className="font-medium text-neutral-900 text-sm">פוסטר בעיצוב אישי</p>
+                <p className="text-sm text-neutral-500">מ-99 ₪</p>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

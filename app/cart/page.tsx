@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
-import { COLOR_LABELS, PRODUCT_LABELS } from "@/lib/types";
+import { COLOR_LABELS, POSTER_PAPER_LABELS, PRODUCT_LABELS } from "@/lib/types";
 
 export default function CartPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function CartPage() {
     );
   }
 
-  const price = calculatePrice(item.quantity);
+  const price = item.category === "poster" ? calculatePrice(item.quantity, item.unitPrice) : calculatePrice(item.quantity);
 
   return (
     <div className="max-w-[900px] mx-auto px-4 md:px-6 py-10">
@@ -37,9 +37,15 @@ export default function CartPage() {
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8 border border-neutral-200 rounded-lg p-5">
         <div className="flex flex-col gap-2">
           <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
-            <Image src={item.mockupUrl} alt="תצוגה מקדימה של החולצה" fill className="object-contain" unoptimized />
+            <Image
+              src={item.category === "poster" ? item.imageUrl : item.mockupUrl}
+              alt={item.category === "poster" ? "תצוגה מקדימה של הפוסטר" : "תצוגה מקדימה של החולצה"}
+              fill
+              className="object-contain"
+              unoptimized
+            />
           </div>
-          {item.backMockupUrl && (
+          {item.category === "apparel" && item.backMockupUrl && (
             <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
               <Image src={item.backMockupUrl} alt="תצוגה מקדימה של גב החולצה" fill className="object-contain" unoptimized />
             </div>
@@ -47,19 +53,33 @@ export default function CartPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{PRODUCT_LABELS[item.productType]}</h2>
-          <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
-            <dt className="text-neutral-500">צבע</dt>
-            <dd>{COLOR_LABELS[item.color]}</dd>
-            <dt className="text-neutral-500">מידה</dt>
-            <dd>{item.size}</dd>
-            {item.backMockupUrl && (
-              <>
-                <dt className="text-neutral-500">הדפסה</dt>
-                <dd>חזית + גב</dd>
-              </>
-            )}
-          </dl>
+          {item.category === "poster" ? (
+            <>
+              <h2 className="text-lg font-semibold">פוסטר בעיצוב אישי</h2>
+              <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
+                <dt className="text-neutral-500">נייר</dt>
+                <dd>{POSTER_PAPER_LABELS[item.paper]}</dd>
+                <dt className="text-neutral-500">גודל</dt>
+                <dd>50×70 ס&quot;מ</dd>
+              </dl>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold">{PRODUCT_LABELS[item.productType]}</h2>
+              <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
+                <dt className="text-neutral-500">צבע</dt>
+                <dd>{COLOR_LABELS[item.color]}</dd>
+                <dt className="text-neutral-500">מידה</dt>
+                <dd>{item.size}</dd>
+                {item.backMockupUrl && (
+                  <>
+                    <dt className="text-neutral-500">הדפסה</dt>
+                    <dd>חזית + גב</dd>
+                  </>
+                )}
+              </dl>
+            </>
+          )}
 
           <div className="flex items-center gap-3 mt-2">
             <span className="text-sm text-neutral-500">כמות</span>
@@ -82,7 +102,10 @@ export default function CartPage() {
             </button>
           </div>
 
-          <Link href="/design" className="text-sm text-neutral-500 underline w-fit mt-1">
+          <Link
+            href={item.category === "poster" ? "/design/poster" : "/design"}
+            className="text-sm text-neutral-500 underline w-fit mt-1"
+          >
             עריכת העיצוב
           </Link>
         </div>

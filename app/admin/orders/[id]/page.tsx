@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/lib/db";
-import { COLOR_LABELS, PRODUCT_LABELS } from "@/lib/types";
+import { COLOR_LABELS, POSTER_PAPER_LABELS, PRODUCT_LABELS, type PosterPaper } from "@/lib/types";
 import StatusSelect from "@/components/admin/StatusSelect";
 import SendToGelatoButton from "@/components/admin/SendToGelatoButton";
 
@@ -59,12 +59,23 @@ export default async function AdminOrderDetailPage({
         <div className="bg-white border border-neutral-200 rounded-lg p-5">
           <h2 className="font-semibold mb-3">פרטי מוצר</h2>
           <dl className="grid grid-cols-[100px_1fr] gap-y-2 text-sm">
-            <dt className="text-neutral-500">מוצר</dt>
-            <dd>{PRODUCT_LABELS[order.product_type]}</dd>
-            <dt className="text-neutral-500">צבע</dt>
-            <dd>{COLOR_LABELS[order.color]}</dd>
-            <dt className="text-neutral-500">מידה</dt>
-            <dd>{order.size}</dd>
+            {order.product_category === "poster" ? (
+              <>
+                <dt className="text-neutral-500">מוצר</dt>
+                <dd>פוסטר 50×70 ס&quot;מ</dd>
+                <dt className="text-neutral-500">נייר</dt>
+                <dd>{POSTER_PAPER_LABELS[order.poster_paper as PosterPaper]}</dd>
+              </>
+            ) : (
+              <>
+                <dt className="text-neutral-500">מוצר</dt>
+                <dd>{PRODUCT_LABELS[order.product_type]}</dd>
+                <dt className="text-neutral-500">צבע</dt>
+                <dd>{COLOR_LABELS[order.color]}</dd>
+                <dt className="text-neutral-500">מידה</dt>
+                <dd>{order.size}</dd>
+              </>
+            )}
             <dt className="text-neutral-500">כמות</dt>
             <dd>{order.quantity}</dd>
             <dt className="text-neutral-500">מחיר</dt>

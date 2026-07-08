@@ -190,6 +190,7 @@ export default function DesignPage() {
       }
 
       setItem({
+        category: "apparel",
         productType,
         color,
         size,

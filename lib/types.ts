@@ -1,5 +1,29 @@
 export type ProductType = "men" | "women" | "kids";
 
+/** Top-level product line. "apparel" is the existing t-shirt flow. */
+export type ProductCategory = "apparel" | "poster";
+
+export type PosterPaper = "glossy" | "matte";
+export type PosterOrientation = "ver" | "hor";
+
+export const POSTER_PAPER_LABELS: Record<PosterPaper, string> = {
+  glossy: "נייר משי (מבריק למחצה)",
+  matte: "נייר מאט פרימיום",
+};
+
+/**
+ * Single fixed size (50x70cm) — verified against the Gelato Product API
+ * (catalog "posters", productUid `flat_500x700-mm-20x28-inch_...`) on
+ * 2026-07-08. Prices include production + DHL Express shipping to IL with
+ * a healthy margin over the real Gelato cost (glossy: 60.19₪ cost, matte:
+ * 66.14₪ cost — both quoted by the user directly from their Gelato
+ * dashboard, since the orders:quote API endpoint 500s on this account).
+ */
+export const POSTER_PRICE: Record<PosterPaper, number> = {
+  glossy: 99,
+  matte: 109,
+};
+
 export type ShirtColor = "white" | "black" | "blue" | "red" | "royal" | "pink";
 
 export type PrintSide = "front" | "back";
@@ -66,7 +90,8 @@ export interface DesignTransform {
   rotation: number;
 }
 
-export interface CartItem {
+export interface ApparelCartItem {
+  category: "apparel";
   productType: ProductType;
   color: ShirtColor;
   size: Size;
@@ -87,6 +112,20 @@ export interface CartItem {
   backTransform?: DesignTransform | null;
 }
 
+export interface PosterCartItem {
+  category: "poster";
+  paper: PosterPaper;
+  orientation: PosterOrientation;
+  quantity: number;
+  /** Poster prints are full-bleed — the uploaded file itself is the print file. */
+  imageUrl: string;
+  printFileUrl: string;
+  /** Snapshot of POSTER_PRICE[paper] at add-to-cart time. */
+  unitPrice: number;
+}
+
+export type CartItem = ApparelCartItem | PosterCartItem;
+
 export interface CustomerDetails {
   customerName: string;
   phone: string;
@@ -106,9 +145,13 @@ export interface OrderRecord {
   city: string;
   zip: string;
   notes: string | null;
+  product_category: ProductCategory;
+  /** Placeholder values on poster rows (product_category === "poster") — never read. */
   product_type: ProductType;
   size: Size;
   color: ShirtColor;
+  poster_paper: PosterPaper | null;
+  poster_orientation: PosterOrientation | null;
   quantity: number;
   image_url: string;
   mockup_url: string;

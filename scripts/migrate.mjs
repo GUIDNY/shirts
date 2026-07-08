@@ -30,8 +30,14 @@ const schema = readFileSync(resolve(root, "db/schema.sql"), "utf8");
 // split on semicolons at end of statements (schema has no functions/triggers)
 const statements = schema
   .split(/;\s*\n/)
-  .map((s) => s.trim())
-  .filter((s) => s && !s.startsWith("--"));
+  .map((s) =>
+    s
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n")
+      .trim()
+  )
+  .filter(Boolean);
 
 for (const stmt of statements) {
   await sql.query(stmt);
