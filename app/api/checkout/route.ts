@@ -10,14 +10,18 @@ import {
   POSTER_PRICE,
   PRODUCT_LABELS,
   SIZES,
+  TOTE_COLOR_LABELS,
+  TOTE_PRICE,
   type CartItem,
   type CustomerDetails,
   type PosterPaper,
+  type ToteColor,
 } from "@/lib/types";
 
 const VALID_PRODUCT_TYPES = ["men", "women", "kids"];
 const VALID_POSTER_PAPERS = ["glossy", "matte"];
 const VALID_POSTER_ORIENTATIONS = ["ver", "hor"];
+const VALID_TOTE_COLORS = ["natural", "black", "navy", "white"];
 
 function isBlobUrl(url: unknown): boolean {
   if (typeof url !== "string") return false;
@@ -79,6 +83,38 @@ export async function POST(request: Request) {
       color: "white",
       poster_paper: item.paper,
       poster_orientation: item.orientation,
+      tote_color: null,
+      quantity: item.quantity,
+      image_url: item.imageUrl,
+      mockup_url: item.imageUrl,
+      print_file_url: item.printFileUrl,
+      back_image_url: null,
+      back_mockup_url: null,
+      back_print_file_url: null,
+      price: price.total,
+    };
+  } else if (item.category === "tote") {
+    if (!VALID_TOTE_COLORS.includes(item.color) || !isBlobUrl(item.imageUrl) || !isBlobUrl(item.printFileUrl)) {
+      return NextResponse.json({ error: "נתוני ההזמנה אינם תקינים" }, { status: 400 });
+    }
+
+    price = calculatePrice(item.quantity, TOTE_PRICE);
+    description = `טוט בג · ${TOTE_COLOR_LABELS[item.color]} · כמות ${item.quantity}`;
+    newOrderFields = {
+      customer_name: customer.customerName,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+      city: customer.city,
+      zip: customer.zip,
+      notes: customer.notes || null,
+      product_category: "tote",
+      product_type: "men",
+      size: "M",
+      color: "white",
+      poster_paper: null,
+      poster_orientation: null,
+      tote_color: item.color as ToteColor,
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.imageUrl,
@@ -130,6 +166,7 @@ export async function POST(request: Request) {
       color: item.color,
       poster_paper: null,
       poster_orientation: null,
+      tote_color: null,
       quantity: item.quantity,
       image_url: item.imageUrl,
       mockup_url: item.mockupUrl,
@@ -179,7 +216,12 @@ export async function POST(request: Request) {
               currency: "ils",
               unit_amount: Math.round(price.total * 100),
               product_data: {
-                name: item.category === "poster" ? "הזמנת פוסטר בעיצוב אישי" : "הזמנת חולצה בעיצוב אישי",
+                name:
+                  item.category === "poster"
+                    ? "הזמנת פוסטר בעיצוב אישי"
+                    : item.category === "tote"
+                      ? "הזמנת טוט בג בעיצוב אישי"
+                      : "הזמנת חולצה בעיצוב אישי",
                 description,
               },
             },

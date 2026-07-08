@@ -1,5 +1,5 @@
 import "server-only";
-import type { OrderRecord, PosterOrientation, PosterPaper, ProductType, ShirtColor, Size } from "./types";
+import type { OrderRecord, PosterOrientation, PosterPaper, ProductType, ShirtColor, Size, ToteColor } from "./types";
 
 const GELATO_API_BASE = "https://order.gelatoapis.com";
 const GELATO_API_KEY = process.env.GELATO_API_KEY;
@@ -78,6 +78,16 @@ export function getPosterProductUid(paper: PosterPaper, orientation: PosterOrien
   return `flat_500x700-mm-20x28-inch_${GELATO_POSTER_PAPER[paper]}_4-0_${orientation}`;
 }
 
+/**
+ * Standard classic tote bag (catalog "tote-bags"), front print only.
+ * Verified against the Gelato Product API and a real draft order on
+ * 2026-07-08 — file type "front" (same convention as apparel), cost
+ * 49.94₪ + 46.80₪ IL shipping, matching the user's own dashboard figures.
+ */
+export function getToteProductUid(color: ToteColor): string {
+  return `bag_product_bsc_tote-bag_bqa_clc_bsi_std-t_bco_${color}_bpr_4-0`;
+}
+
 export interface GelatoOrderResponse {
   id: string;
   orderReferenceId: string;
@@ -116,6 +126,9 @@ export async function createGelatoOrder(
     );
     // Posters are full-bleed single-sided prints — file type "default".
     files.push({ type: "default", url: order.print_file_url || order.image_url });
+  } else if (order.product_category === "tote") {
+    productUid = getToteProductUid(order.tote_color as ToteColor);
+    files.push({ type: GELATO_PRINT_AREA, url: order.print_file_url || order.image_url });
   } else {
     const hasBackPrint = Boolean(order.back_image_url);
     productUid = getProductUid(order.product_type, order.color, order.size, hasBackPrint);

@@ -1,7 +1,7 @@
 export type ProductType = "men" | "women" | "kids";
 
 /** Top-level product line. "apparel" is the existing t-shirt flow. */
-export type ProductCategory = "apparel" | "poster";
+export type ProductCategory = "apparel" | "poster" | "tote";
 
 export type PosterPaper = "glossy" | "matte";
 export type PosterOrientation = "ver" | "hor";
@@ -23,6 +23,33 @@ export const POSTER_PRICE: Record<PosterPaper, number> = {
   glossy: 99,
   matte: 109,
 };
+
+export type ToteColor = "natural" | "black" | "navy" | "white";
+
+export const TOTE_COLOR_LABELS: Record<ToteColor, string> = {
+  natural: "טבעי",
+  black: "שחור",
+  navy: "נייבי",
+  white: "לבן",
+};
+
+/** Fabric swatch colors — real Westford Mill canvas tones, not tinted. */
+export const TOTE_COLOR_HEX: Record<ToteColor, string> = {
+  natural: "#e8dfc8",
+  black: "#232323",
+  navy: "#22335c",
+  white: "#f5f5f0",
+};
+
+/**
+ * Single fixed size (standard tote, catalog "tote-bags", productUid
+ * `bag_product_bsc_tote-bag_bqa_clc_bsi_std-t_bco_{color}_bpr_4-0`) —
+ * verified against the Gelato Product API on 2026-07-08, plus a real
+ * draft order confirming the file type ("front") and the exact cost
+ * (49.94₪ production + 46.80₪ DHL express to IL = 96.74₪, matching the
+ * user's own dashboard figures exactly).
+ */
+export const TOTE_PRICE = 149;
 
 export type ShirtColor = "white" | "black" | "blue" | "red" | "royal" | "pink";
 
@@ -124,7 +151,17 @@ export interface PosterCartItem {
   unitPrice: number;
 }
 
-export type CartItem = ApparelCartItem | PosterCartItem;
+export interface ToteCartItem {
+  category: "tote";
+  color: ToteColor;
+  quantity: number;
+  /** Same file used for both the flat preview and the print — no compositing needed. */
+  imageUrl: string;
+  printFileUrl: string;
+  unitPrice: number;
+}
+
+export type CartItem = ApparelCartItem | PosterCartItem | ToteCartItem;
 
 export interface CustomerDetails {
   customerName: string;
@@ -152,6 +189,7 @@ export interface OrderRecord {
   color: ShirtColor;
   poster_paper: PosterPaper | null;
   poster_orientation: PosterOrientation | null;
+  tote_color: ToteColor | null;
   quantity: number;
   image_url: string;
   mockup_url: string;

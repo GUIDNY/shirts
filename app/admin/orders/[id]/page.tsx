@@ -2,7 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/lib/db";
-import { COLOR_LABELS, POSTER_PAPER_LABELS, PRODUCT_LABELS, type PosterPaper } from "@/lib/types";
+import {
+  COLOR_LABELS,
+  POSTER_PAPER_LABELS,
+  PRODUCT_LABELS,
+  TOTE_COLOR_LABELS,
+  type PosterPaper,
+  type ToteColor,
+} from "@/lib/types";
 import StatusSelect from "@/components/admin/StatusSelect";
 import SendToGelatoButton from "@/components/admin/SendToGelatoButton";
 
@@ -65,6 +72,13 @@ export default async function AdminOrderDetailPage({
                 <dd>פוסטר 50×70 ס&quot;מ</dd>
                 <dt className="text-neutral-500">נייר</dt>
                 <dd>{POSTER_PAPER_LABELS[order.poster_paper as PosterPaper]}</dd>
+              </>
+            ) : order.product_category === "tote" ? (
+              <>
+                <dt className="text-neutral-500">מוצר</dt>
+                <dd>טוט בג 38×42 ס&quot;מ</dd>
+                <dt className="text-neutral-500">צבע</dt>
+                <dd>{TOTE_COLOR_LABELS[order.tote_color as ToteColor]}</dd>
               </>
             ) : (
               <>

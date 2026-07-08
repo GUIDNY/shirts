@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
-import { COLOR_LABELS, POSTER_PAPER_LABELS, PRODUCT_LABELS } from "@/lib/types";
+import { COLOR_LABELS, POSTER_PAPER_LABELS, PRODUCT_LABELS, TOTE_COLOR_LABELS } from "@/lib/types";
 
 export default function CartPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function CartPage() {
     );
   }
 
-  const price = item.category === "poster" ? calculatePrice(item.quantity, item.unitPrice) : calculatePrice(item.quantity);
+  const price = item.category === "apparel" ? calculatePrice(item.quantity) : calculatePrice(item.quantity, item.unitPrice);
 
   return (
     <div className="max-w-[900px] mx-auto px-4 md:px-6 py-10">
@@ -38,8 +38,14 @@ export default function CartPage() {
         <div className="flex flex-col gap-2">
           <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-neutral-50">
             <Image
-              src={item.category === "poster" ? item.imageUrl : item.mockupUrl}
-              alt={item.category === "poster" ? "תצוגה מקדימה של הפוסטר" : "תצוגה מקדימה של החולצה"}
+              src={item.category === "apparel" ? item.mockupUrl : item.imageUrl}
+              alt={
+                item.category === "poster"
+                  ? "תצוגה מקדימה של הפוסטר"
+                  : item.category === "tote"
+                    ? "תצוגה מקדימה של הטוט בג"
+                    : "תצוגה מקדימה של החולצה"
+              }
               fill
               className="object-contain"
               unoptimized
@@ -61,6 +67,16 @@ export default function CartPage() {
                 <dd>{POSTER_PAPER_LABELS[item.paper]}</dd>
                 <dt className="text-neutral-500">גודל</dt>
                 <dd>50×70 ס&quot;מ</dd>
+              </dl>
+            </>
+          ) : item.category === "tote" ? (
+            <>
+              <h2 className="text-lg font-semibold">טוט בג בעיצוב אישי</h2>
+              <dl className="grid grid-cols-2 gap-y-1 text-sm text-neutral-700 max-w-xs">
+                <dt className="text-neutral-500">צבע</dt>
+                <dd>{TOTE_COLOR_LABELS[item.color]}</dd>
+                <dt className="text-neutral-500">גודל</dt>
+                <dd>38×42 ס&quot;מ</dd>
               </dl>
             </>
           ) : (
@@ -103,7 +119,7 @@ export default function CartPage() {
           </div>
 
           <Link
-            href={item.category === "poster" ? "/design/poster" : "/design"}
+            href={item.category === "apparel" ? "/design" : `/design/${item.category}`}
             className="text-sm text-neutral-500 underline w-fit mt-1"
           >
             עריכת העיצוב

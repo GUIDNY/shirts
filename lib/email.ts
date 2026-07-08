@@ -1,7 +1,7 @@
 import "server-only";
 import { Resend } from "resend";
-import type { OrderRecord, PosterPaper } from "./types";
-import { PRODUCT_LABELS, COLOR_LABELS, POSTER_PAPER_LABELS } from "./types";
+import type { OrderRecord, PosterPaper, ToteColor } from "./types";
+import { PRODUCT_LABELS, COLOR_LABELS, POSTER_PAPER_LABELS, TOTE_COLOR_LABELS } from "./types";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const fromAddress = process.env.EMAIL_FROM || "orders@example.com";
@@ -27,7 +27,9 @@ export async function sendOrderConfirmationEmail(order: OrderRecord) {
           ${
             order.product_category === "poster"
               ? `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>פוסטר 50×70 · ${POSTER_PAPER_LABELS[order.poster_paper as PosterPaper]}</td></tr>`
-              : `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>${PRODUCT_LABELS[order.product_type]}</td></tr>
+              : order.product_category === "tote"
+                ? `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>טוט בג · ${TOTE_COLOR_LABELS[order.tote_color as ToteColor]}</td></tr>`
+                : `<tr><td style="padding: 4px 0; color: #666;">מוצר</td><td>${PRODUCT_LABELS[order.product_type]}</td></tr>
           <tr><td style="padding: 4px 0; color: #666;">צבע</td><td>${COLOR_LABELS[order.color]}</td></tr>
           <tr><td style="padding: 4px 0; color: #666;">מידה</td><td>${order.size}</td></tr>`
           }

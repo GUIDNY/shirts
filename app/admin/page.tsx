@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { listOrders } from "@/lib/db";
-import { COLOR_LABELS, POSTER_PAPER_LABELS, PRODUCT_LABELS, type PosterPaper } from "@/lib/types";
+import {
+  COLOR_LABELS,
+  POSTER_PAPER_LABELS,
+  PRODUCT_LABELS,
+  TOTE_COLOR_LABELS,
+  type PosterPaper,
+  type ToteColor,
+} from "@/lib/types";
 import OrderStatusBadge from "@/components/admin/OrderStatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +46,9 @@ export default async function AdminOrdersPage() {
                   <td className="px-4 py-3">
                     {order.product_category === "poster"
                       ? `פוסטר · ${POSTER_PAPER_LABELS[order.poster_paper as PosterPaper]}`
-                      : `${PRODUCT_LABELS[order.product_type]} · ${COLOR_LABELS[order.color]} · ${order.size}`}
+                      : order.product_category === "tote"
+                        ? `טוט בג · ${TOTE_COLOR_LABELS[order.tote_color as ToteColor]}`
+                        : `${PRODUCT_LABELS[order.product_type]} · ${COLOR_LABELS[order.color]} · ${order.size}`}
                   </td>
                   <td className="px-4 py-3">{order.quantity}</td>
                   <td className="px-4 py-3">{order.price} ₪</td>
