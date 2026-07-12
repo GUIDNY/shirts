@@ -13,7 +13,7 @@ export interface CarouselItem {
   visual?: ReactNode;
 }
 
-export default function ProductCarousel({ items }: { items: CarouselItem[] }) {
+export default function ProductCarousel({ title, items }: { title: string; items: CarouselItem[] }) {
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [index, setIndex] = useState(0);
 
@@ -24,8 +24,36 @@ export default function ProductCarousel({ items }: { items: CarouselItem[] }) {
   }
 
   return (
-    <div className="relative">
-      <div className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 scrollbar-none">
+    <div>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-neutral-900">{title}</h2>
+        <div className="hidden md:flex gap-2">
+          <button
+            type="button"
+            onClick={() => go(index + 1)}
+            disabled={index >= items.length - 1}
+            aria-label="המוצר הבא"
+            className="h-10 w-10 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M8 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => go(index - 1)}
+            disabled={index <= 0}
+            aria-label="המוצר הקודם"
+            className="h-10 w-10 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex gap-4 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
         {items.map((item, i) => (
           <Link
             key={item.href}
@@ -33,9 +61,9 @@ export default function ProductCarousel({ items }: { items: CarouselItem[] }) {
               itemRefs.current[i] = el;
             }}
             href={item.href}
-            className="shrink-0 w-[46%] sm:w-[220px] snap-start rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
+            className="shrink-0 w-[46%] sm:w-[260px] md:w-[280px] snap-start group bg-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300"
           >
-            <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100">
+            <div className="relative aspect-square bg-neutral-100 overflow-hidden">
               {item.visual ? (
                 item.visual
               ) : (
@@ -43,41 +71,18 @@ export default function ProductCarousel({ items }: { items: CarouselItem[] }) {
                   src={item.src!}
                   alt={item.alt!}
                   fill
-                  className="object-cover group-hover:scale-[1.05] transition-transform"
-                  sizes="(max-width: 640px) 46vw, 220px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 640px) 46vw, 280px"
                 />
               )}
             </div>
-            <div className="p-3">
-              <p className="font-medium text-neutral-900 text-sm">{item.label}</p>
+            <div className="p-5 text-center border-t border-neutral-100">
+              <h3 className="text-sm font-medium text-neutral-900 mb-1">{item.label}</h3>
               <p className="text-sm text-neutral-500">{item.price}</p>
             </div>
           </Link>
         ))}
       </div>
-
-      <button
-        type="button"
-        onClick={() => go(index + 1)}
-        disabled={index >= items.length - 1}
-        aria-label="המוצר הבא"
-        className="hidden md:flex absolute top-[38%] -translate-y-1/2 -left-4 h-10 w-10 rounded-full bg-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-neutral-200 items-center justify-center hover:bg-neutral-50 disabled:opacity-0 disabled:pointer-events-none transition-opacity z-10"
-      >
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M8 4l6 6-6 6" stroke="#171717" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={() => go(index - 1)}
-        disabled={index <= 0}
-        aria-label="המוצר הקודם"
-        className="hidden md:flex absolute top-[38%] -translate-y-1/2 -right-4 h-10 w-10 rounded-full bg-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-neutral-200 items-center justify-center hover:bg-neutral-50 disabled:opacity-0 disabled:pointer-events-none transition-opacity z-10"
-      >
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M12 4l-6 6 6 6" stroke="#171717" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
     </div>
   );
 }
