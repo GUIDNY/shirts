@@ -2,11 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
 import { MUG_PRICE } from "@/lib/types";
 import StickyCheckoutBar from "@/components/design/StickyCheckoutBar";
+
+/**
+ * Print area as fractions of the base mug photo (1200x800,
+ * public/studio/mug-blank.jpg — a free-to-use Unsplash product shot,
+ * front-facing blank mug, handle to the left), measured directly against
+ * the image on 2026-07-12.
+ */
+const PRINT_AREA = { left: 0.408, top: 0.3125, width: 0.225, height: 0.375 };
 
 const MAX_SIZE_MB = 20;
 
@@ -99,44 +108,41 @@ export default function MugDesignPage() {
             </div>
 
             <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-6 md:p-10">
-              <svg width="280" height="260" viewBox="0 0 280 260" className="drop-shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
-                {/* handle */}
-                <path
-                  d="M215 90 C260 90, 260 170, 215 170"
-                  fill="none"
-                  stroke="#f5f5f0"
-                  strokeWidth="16"
-                />
-                {/* body */}
-                <rect x="55" y="55" width="160" height="150" rx="6" fill="#f5f5f0" />
-                {previewUrl && (
-                  <>
-                    <clipPath id="mugPrintArea">
-                      <rect x="75" y="90" width="120" height="90" rx="2" />
-                    </clipPath>
-                    <image
-                      href={previewUrl}
-                      x="75"
-                      y="90"
-                      width="120"
-                      height="90"
-                      preserveAspectRatio="xMidYMid slice"
-                      clipPath="url(#mugPrintArea)"
+              <div className="relative w-[320px] aspect-[3/2] rounded-lg overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                <Image src="/studio/mug-blank.jpg" alt="ספל קרמיקה לבן" fill className="object-cover" sizes="320px" />
+                {previewUrl ? (
+                  <div
+                    className="absolute overflow-hidden"
+                    style={{
+                      left: `${PRINT_AREA.left * 100}%`,
+                      top: `${PRINT_AREA.top * 100}%`,
+                      width: `${PRINT_AREA.width * 100}%`,
+                      height: `${PRINT_AREA.height * 100}%`,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={previewUrl} alt="עיצוב" className="absolute inset-0 w-full h-full object-cover" />
+                    {/* mimics the mug's own cylindrical shading so the print reads as wrapped, not pasted flat */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(0,0,0,0.35) 100%)",
+                        mixBlendMode: "multiply",
+                      }}
                     />
-                  </>
-                )}
-                {!previewUrl && (
-                  <rect
-                    x="75"
-                    y="90"
-                    width="120"
-                    height="90"
-                    fill="none"
-                    stroke="rgba(0,0,0,0.2)"
-                    strokeDasharray="4 4"
+                  </div>
+                ) : (
+                  <div
+                    className="absolute border-2 border-dashed border-black/20 rounded-sm"
+                    style={{
+                      left: `${PRINT_AREA.left * 100}%`,
+                      top: `${PRINT_AREA.top * 100}%`,
+                      width: `${PRINT_AREA.width * 100}%`,
+                      height: `${PRINT_AREA.height * 100}%`,
+                    }}
                   />
                 )}
-              </svg>
+              </div>
             </div>
 
             {error && <p className="text-sm text-red-400">{error}</p>}

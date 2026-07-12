@@ -1,4 +1,4 @@
-export const UNIT_PRICE = 89;
+export const UNIT_PRICE = 115; // 89 + 30% (2026-07-12)
 export const SHIPPING_PRICE = 25;
 export const FREE_SHIPPING_MIN_QTY = 4; // מעל 3 חולצות = 4 ומעלה
 

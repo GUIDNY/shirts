@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { LogoMark } from "@/components/Logo";
+import { CANVAS_PRICE, MUG_PRICE, POSTER_PRICE, TOTE_PRICE } from "@/lib/types";
+import { UNIT_PRICE } from "@/lib/pricing";
 
 const CHECKS = ["בלי עלות התחלה", "בלי מינימום הזמנה", "משלוח מהיר ואמין"];
 
@@ -51,9 +53,9 @@ const STEPS = [
 ];
 
 const PRODUCTS: { src: string; label: string; price: string }[] = [
-  { src: "/studio/model-men.jpg", label: "חולצת גברים", price: "מ-89 ₪" },
-  { src: "/studio/model-women.jpg", label: "חולצת נשים", price: "מ-89 ₪" },
-  { src: "/studio/model-kids.jpg", label: "חולצת ילדים", price: "מ-89 ₪" },
+  { src: "/studio/model-men.jpg", label: "חולצת גברים", price: `מ-${UNIT_PRICE} ₪` },
+  { src: "/studio/model-women.jpg", label: "חולצת נשים", price: `מ-${UNIT_PRICE} ₪` },
+  { src: "/studio/model-kids.jpg", label: "חולצת ילדים", price: `מ-${UNIT_PRICE} ₪` },
 ];
 
 export default function HomePage() {
@@ -230,7 +232,7 @@ export default function HomePage() {
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">פוסטר בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-99 ₪</p>
+                <p className="text-sm text-neutral-500">מ-{POSTER_PRICE.glossy} ₪</p>
               </div>
             </Link>
 
@@ -243,7 +245,7 @@ export default function HomePage() {
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">טוט בג בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-149 ₪</p>
+                <p className="text-sm text-neutral-500">מ-{TOTE_PRICE} ₪</p>
               </div>
             </Link>
 
@@ -258,7 +260,7 @@ export default function HomePage() {
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">קנבס בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-379 ₪</p>
+                <p className="text-sm text-neutral-500">מ-{CANVAS_PRICE} ₪</p>
               </div>
             </Link>
 
@@ -271,7 +273,7 @@ export default function HomePage() {
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">ספל בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-249 ₪</p>
+                <p className="text-sm text-neutral-500">מ-{MUG_PRICE} ₪</p>
               </div>
             </Link>
           </div>

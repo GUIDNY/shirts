@@ -20,8 +20,8 @@ export const POSTER_PAPER_LABELS: Record<PosterPaper, string> = {
  * dashboard, since the orders:quote API endpoint 500s on this account).
  */
 export const POSTER_PRICE: Record<PosterPaper, number> = {
-  glossy: 99,
-  matte: 109,
+  glossy: 130, // 99 + 30% (2026-07-12)
+  matte: 140, // 109 + 30% (2026-07-12)
 };
 
 export type ToteColor = "natural" | "black" | "navy" | "white";
@@ -49,7 +49,7 @@ export const TOTE_COLOR_HEX: Record<ToteColor, string> = {
  * (49.94₪ production + 46.80₪ DHL express to IL = 96.74₪, matching the
  * user's own dashboard figures exactly).
  */
-export const TOTE_PRICE = 149;
+export const TOTE_PRICE = 195; // 149 + 30% (2026-07-12)
 
 export type CanvasOrientation = "ver" | "hor";
 
@@ -65,7 +65,7 @@ export type CanvasOrientation = "ver" | "hor";
  * was for a different sub-variant. Went with this verified live number
  * rather than the table, and priced accordingly as a clear premium item.
  */
-export const CANVAS_PRICE = 379;
+export const CANVAS_PRICE = 495; // 379 + 30% (2026-07-12)
 
 /**
  * Single fixed variant (11oz white ceramic mug), catalog "mugs", productUid
@@ -76,7 +76,7 @@ export const CANVAS_PRICE = 379;
  * it" given IL shipping is ~4x the item cost, but asked for it to be built
  * anyway and priced as premium rather than skipped.
  */
-export const MUG_PRICE = 249;
+export const MUG_PRICE = 325; // 249 + 30% (2026-07-12)
 
 export type ShirtColor = "white" | "black" | "blue" | "red" | "royal" | "pink";
 
