@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { LogoMark } from "@/components/Logo";
+import ProductCarousel, { type CarouselItem } from "@/components/ProductCarousel";
 import { CANVAS_PRICE, MUG_PRICE, POSTER_PRICE, TOTE_PRICE } from "@/lib/types";
 import { UNIT_PRICE } from "@/lib/pricing";
 
@@ -52,10 +53,26 @@ const STEPS = [
   { title: "אנחנו מדפיסים ושולחים", desc: "ישירות עד הבית" },
 ];
 
-const PRODUCTS: { src: string; label: string; price: string }[] = [
+const FEATURED_PRODUCTS: { src: string; label: string; price: string }[] = [
   { src: "/studio/model-men.jpg", label: "חולצת גברים", price: `מ-${UNIT_PRICE} ₪` },
-  { src: "/studio/model-women.jpg", label: "חולצת נשים", price: `מ-${UNIT_PRICE} ₪` },
   { src: "/studio/model-kids.jpg", label: "חולצת ילדים", price: `מ-${UNIT_PRICE} ₪` },
+];
+
+const MORE_PRODUCTS: CarouselItem[] = [
+  { href: "/design", src: "/studio/model-women.jpg", alt: "חולצת נשים", label: "חולצת נשים", price: `מ-${UNIT_PRICE} ₪` },
+  {
+    href: "/design/poster",
+    label: "פוסטר בעיצוב אישי",
+    price: `מ-${POSTER_PRICE.glossy} ₪`,
+    visual: (
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-100 to-blue-100 flex items-center justify-center">
+        <div className="w-[55%] aspect-[5/7] bg-white shadow-lg" />
+      </div>
+    ),
+  },
+  { href: "/design/tote", src: "/studio/tote-blank.jpg", alt: "טוט בג בעיצוב אישי", label: "טוט בג בעיצוב אישי", price: `מ-${TOTE_PRICE} ₪` },
+  { href: "/design/canvas", src: "/studio/canvas-blank.jpg", alt: "קנבס בעיצוב אישי", label: "קנבס בעיצוב אישי", price: `מ-${CANVAS_PRICE} ₪` },
+  { href: "/design/mug", src: "/studio/mug-blank.jpg", alt: "ספל בעיצוב אישי", label: "ספל בעיצוב אישי", price: `מ-${MUG_PRICE} ₪` },
 ];
 
 export default function HomePage() {
@@ -156,143 +173,68 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How it works + Products */}
-      <section id="products" className="max-w-[1200px] mx-auto px-4 md:px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-14">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
-            איך זה <span className="brand-gradient-text">עובד</span>
-          </h2>
-          <p className="text-neutral-500 mb-10">מתחילים תוך שלושה צעדים פשוטים.</p>
+      {/* How it works */}
+      <section className="max-w-[700px] mx-auto px-4 md:px-6 py-16 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold mb-2">
+          איך זה <span className="brand-gradient-text">עובד</span>
+        </h2>
+        <p className="text-neutral-500 mb-10">מתחילים תוך שלושה צעדים פשוטים.</p>
 
-          <div className="flex flex-col">
-            {STEPS.map((step, i) => (
-              <div key={step.title} className="flex items-start gap-4">
-                <div className="shrink-0 flex flex-col items-center">
-                  <div className="h-10 w-10 rounded-full brand-gradient-bg text-white flex items-center justify-center font-bold">
-                    {i + 1}
-                  </div>
-                  {i < STEPS.length - 1 && (
-                    <div
-                      className="w-px flex-1 my-1.5 min-h-[28px]"
-                      style={{ backgroundImage: "repeating-linear-gradient(to bottom, #d4d4d8 0 4px, transparent 4px 9px)" }}
-                    />
-                  )}
-                </div>
-                <div className="pb-8">
-                  <h3 className="font-semibold text-neutral-900">{step.title}</h3>
-                  <p className="text-sm text-neutral-500 mt-0.5">{step.desc}</p>
+        <div className="flex flex-col sm:flex-row items-start justify-center gap-6 sm:gap-4 text-right sm:text-center">
+          {STEPS.map((step, i) => (
+            <div key={step.title} className="flex sm:flex-col items-start sm:items-center gap-4 flex-1 max-w-[220px]">
+              <div className="shrink-0 flex sm:flex-col items-center">
+                <div className="h-10 w-10 rounded-full brand-gradient-bg text-white flex items-center justify-center font-bold">
+                  {i + 1}
                 </div>
               </div>
-            ))}
-          </div>
-
-          <Link
-            href="/design"
-            className="mt-10 inline-flex items-center justify-center h-12 px-8 rounded-md brand-gradient-bg text-white text-base font-semibold hover:brightness-110 transition-all"
-          >
-            התחילו לעצב עכשיו
-          </Link>
+              <div>
+                <h3 className="font-semibold text-neutral-900">{step.title}</h3>
+                <p className="text-sm text-neutral-500 mt-0.5">{step.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold">מוצרים פופולריים</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {PRODUCTS.map((p) => (
+        <Link
+          href="/design"
+          className="mt-10 inline-flex items-center justify-center h-12 px-8 rounded-md brand-gradient-bg text-white text-base font-semibold hover:brightness-110 transition-all"
+        >
+          התחילו לעצב עכשיו
+        </Link>
+      </section>
+
+      {/* Products */}
+      <section id="products" className="bg-neutral-50 border-y border-neutral-200">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-16">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6">מוצרים פופולריים</h2>
+
+          <div className="grid grid-cols-2 gap-4 md:gap-6">
+            {FEATURED_PRODUCTS.map((p) => (
               <Link
                 key={p.src}
                 href="/design"
-                className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
+                className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group bg-white"
               >
-                <div className="relative aspect-[3/4] bg-neutral-100">
+                <div className="relative aspect-[4/5] bg-neutral-100">
                   <Image
                     src={p.src}
                     alt={p.label}
                     fill
                     className="object-cover group-hover:scale-[1.03] transition-transform"
-                    sizes="(max-width: 1024px) 50vw, 25vw"
+                    sizes="(max-width: 768px) 50vw, 40vw"
                   />
                 </div>
-                <div className="p-3">
-                  <p className="font-medium text-neutral-900 text-sm">{p.label}</p>
+                <div className="p-4">
+                  <p className="font-medium text-neutral-900">{p.label}</p>
                   <p className="text-sm text-neutral-500">{p.price}</p>
                 </div>
               </Link>
             ))}
-
-            <Link
-              href="/design/poster"
-              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
-            >
-              <div className="relative aspect-[3/4] bg-gradient-to-br from-violet-100 to-blue-100 flex items-center justify-center">
-                <div className="w-[55%] aspect-[5/7] bg-white shadow-lg group-hover:scale-[1.03] transition-transform flex items-center justify-center">
-                  <span className="text-3xl">🖼️</span>
-                </div>
-              </div>
-              <div className="p-3">
-                <p className="font-medium text-neutral-900 text-sm">פוסטר בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-{POSTER_PRICE.glossy} ₪</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/design/tote"
-              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
-            >
-              <div className="relative aspect-[3/4] overflow-hidden">
-                <Image
-                  src="/studio/tote-blank.jpg"
-                  alt="טוט בג בעיצוב אישי"
-                  fill
-                  className="object-cover group-hover:scale-[1.05] transition-transform"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
-              </div>
-              <div className="p-3">
-                <p className="font-medium text-neutral-900 text-sm">טוט בג בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-{TOTE_PRICE} ₪</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/design/canvas"
-              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
-            >
-              <div className="relative aspect-[3/4] overflow-hidden">
-                <Image
-                  src="/studio/canvas-blank.jpg"
-                  alt="קנבס בעיצוב אישי"
-                  fill
-                  className="object-cover group-hover:scale-[1.05] transition-transform"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
-              </div>
-              <div className="p-3">
-                <p className="font-medium text-neutral-900 text-sm">קנבס בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-{CANVAS_PRICE} ₪</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/design/mug"
-              className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
-            >
-              <div className="relative aspect-[3/4] overflow-hidden">
-                <Image
-                  src="/studio/mug-blank.jpg"
-                  alt="ספל בעיצוב אישי"
-                  fill
-                  className="object-cover group-hover:scale-[1.05] transition-transform"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
-              </div>
-              <div className="p-3">
-                <p className="font-medium text-neutral-900 text-sm">ספל בעיצוב אישי</p>
-                <p className="text-sm text-neutral-500">מ-{MUG_PRICE} ₪</p>
-              </div>
-            </Link>
           </div>
+
+          <h3 className="text-sm font-medium text-neutral-500 mt-10 mb-4">עוד מוצרים לעיצוב אישי</h3>
+          <ProductCarousel items={MORE_PRODUCTS} />
         </div>
       </section>
 
