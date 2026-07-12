@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import NextImage from "next/image";
 import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
@@ -9,6 +10,14 @@ import { CANVAS_PRICE, type CanvasOrientation } from "@/lib/types";
 import StickyCheckoutBar from "@/components/design/StickyCheckoutBar";
 
 const MAX_SIZE_MB = 20;
+
+/**
+ * Print area as fractions of the base canvas photo (1200x960,
+ * public/studio/canvas-blank.jpg — a free-to-use Unsplash product shot,
+ * blank framed canvas leaning against a wall), measured directly against
+ * the image on 2026-07-13.
+ */
+const PRINT_AREA = { left: 0.225, top: 0.323, width: 0.558, height: 0.354 };
 
 export default function CanvasDesignPage() {
   const router = useRouter();
@@ -106,20 +115,40 @@ export default function CanvasDesignPage() {
             </div>
 
             <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-6 md:p-10">
-              {previewUrl ? (
-                <div
-                  className={`relative bg-white ring-8 ring-[#3a2a1d] shadow-[0_16px_45px_rgba(0,0,0,0.55)] ${
-                    orientation === "ver" ? "w-[220px] aspect-square" : "w-[320px] aspect-square"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="תצוגת הקנבס" className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="w-[240px] aspect-square rounded-md border-2 border-dashed border-white/15 flex items-center justify-center text-center px-4">
-                  <p className="text-sm text-neutral-500">העלו תמונה כדי לראות תצוגה מקדימה</p>
-                </div>
-              )}
+              <div className="relative w-[320px] aspect-[5/4] rounded-lg overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                <NextImage src="/studio/canvas-blank.jpg" alt="קנבס ריק" fill className="object-cover" sizes="320px" />
+                {previewUrl ? (
+                  <div
+                    className="absolute overflow-hidden"
+                    style={{
+                      left: `${PRINT_AREA.left * 100}%`,
+                      top: `${PRINT_AREA.top * 100}%`,
+                      width: `${PRINT_AREA.width * 100}%`,
+                      height: `${PRINT_AREA.height * 100}%`,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={previewUrl} alt="תצוגת הקנבס" className="absolute inset-0 w-full h-full object-cover" />
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: "linear-gradient(to right, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.1) 100%)",
+                        mixBlendMode: "multiply",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="absolute border-2 border-dashed border-black/15 rounded-sm"
+                    style={{
+                      left: `${PRINT_AREA.left * 100}%`,
+                      top: `${PRINT_AREA.top * 100}%`,
+                      width: `${PRINT_AREA.width * 100}%`,
+                      height: `${PRINT_AREA.height * 100}%`,
+                    }}
+                  />
+                )}
+              </div>
             </div>
 
             {error && <p className="text-sm text-red-400">{error}</p>}

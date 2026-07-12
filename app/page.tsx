@@ -240,8 +240,14 @@ export default function HomePage() {
               href="/design/tote"
               className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
             >
-              <div className="relative aspect-[3/4] bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
-                <span className="text-5xl group-hover:scale-[1.05] transition-transform">👜</span>
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <Image
+                  src="/studio/tote-blank.jpg"
+                  alt="טוט בג בעיצוב אישי"
+                  fill
+                  className="object-cover group-hover:scale-[1.05] transition-transform"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">טוט בג בעיצוב אישי</p>
@@ -253,10 +259,14 @@ export default function HomePage() {
               href="/design/canvas"
               className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
             >
-              <div className="relative aspect-[3/4] bg-gradient-to-br from-stone-100 to-neutral-200 flex items-center justify-center">
-                <div className="w-[55%] aspect-square bg-white ring-4 ring-[#3a2a1d] shadow-lg group-hover:scale-[1.03] transition-transform flex items-center justify-center">
-                  <span className="text-3xl">🎨</span>
-                </div>
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <Image
+                  src="/studio/canvas-blank.jpg"
+                  alt="קנבס בעיצוב אישי"
+                  fill
+                  className="object-cover group-hover:scale-[1.05] transition-transform"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">קנבס בעיצוב אישי</p>
@@ -268,8 +278,14 @@ export default function HomePage() {
               href="/design/mug"
               className="rounded-xl border border-neutral-200 overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow group"
             >
-              <div className="relative aspect-[3/4] bg-gradient-to-br from-sky-50 to-cyan-100 flex items-center justify-center">
-                <span className="text-5xl group-hover:scale-[1.05] transition-transform">☕</span>
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <Image
+                  src="/studio/mug-blank.jpg"
+                  alt="ספל בעיצוב אישי"
+                  fill
+                  className="object-cover group-hover:scale-[1.05] transition-transform"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
               </div>
               <div className="p-3">
                 <p className="font-medium text-neutral-900 text-sm">ספל בעיצוב אישי</p>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
 import { calculatePrice } from "@/lib/pricing";
@@ -10,6 +11,16 @@ import StickyCheckoutBar from "@/components/design/StickyCheckoutBar";
 
 const MAX_SIZE_MB = 20;
 const COLORS: ToteColor[] = ["natural", "black", "navy", "white"];
+
+/**
+ * Print area as fractions of the base tote photo (1200x800,
+ * public/studio/tote-blank.jpg — a free-to-use Unsplash product shot,
+ * natural canvas tote hanging flat, front panel fully visible), measured
+ * directly against the image on 2026-07-13. Only used for "natural" —
+ * the photo has one real color, so other colors fall back to the SVG
+ * (which can be tinted to anything).
+ */
+const PRINT_AREA = { left: 0.392, top: 0.4, width: 0.225, height: 0.3 };
 
 export default function ToteDesignPage() {
   const router = useRouter();
@@ -105,49 +116,86 @@ export default function ToteDesignPage() {
             </div>
 
             <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-6 md:p-10">
-              <svg
-                width="280"
-                height="320"
-                viewBox="0 0 280 320"
-                className="drop-shadow-[0_12px_30px_rgba(0,0,0,0.45)]"
-              >
-                {/* handles */}
-                <path
-                  d="M85 90 C85 40, 115 15, 140 15 C165 15, 195 40, 195 90"
-                  fill="none"
-                  stroke={bagFill}
-                  strokeWidth="10"
-                />
-                {/* body */}
-                <path d="M50 90 L230 90 L215 300 L65 300 Z" fill={bagFill} stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
-                {previewUrl && (
-                  <>
-                    <clipPath id="totePrintArea">
-                      <rect x="95" y="140" width="90" height="90" />
-                    </clipPath>
-                    <image
-                      href={previewUrl}
+              {color === "natural" ? (
+                <div className="relative w-[320px] aspect-[3/2] rounded-lg overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                  <Image src="/studio/tote-blank.jpg" alt="טוט בג טבעי" fill className="object-cover" sizes="320px" />
+                  {previewUrl ? (
+                    <div
+                      className="absolute overflow-hidden"
+                      style={{
+                        left: `${PRINT_AREA.left * 100}%`,
+                        top: `${PRINT_AREA.top * 100}%`,
+                        width: `${PRINT_AREA.width * 100}%`,
+                        height: `${PRINT_AREA.height * 100}%`,
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={previewUrl} alt="עיצוב" className="absolute inset-0 w-full h-full object-cover" />
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 100%)",
+                          mixBlendMode: "multiply",
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="absolute border-2 border-dashed border-black/20 rounded-sm"
+                      style={{
+                        left: `${PRINT_AREA.left * 100}%`,
+                        top: `${PRINT_AREA.top * 100}%`,
+                        width: `${PRINT_AREA.width * 100}%`,
+                        height: `${PRINT_AREA.height * 100}%`,
+                      }}
+                    />
+                  )}
+                </div>
+              ) : (
+                <svg
+                  width="280"
+                  height="320"
+                  viewBox="0 0 280 320"
+                  className="drop-shadow-[0_12px_30px_rgba(0,0,0,0.45)]"
+                >
+                  {/* handles */}
+                  <path
+                    d="M85 90 C85 40, 115 15, 140 15 C165 15, 195 40, 195 90"
+                    fill="none"
+                    stroke={bagFill}
+                    strokeWidth="10"
+                  />
+                  {/* body */}
+                  <path d="M50 90 L230 90 L215 300 L65 300 Z" fill={bagFill} stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
+                  {previewUrl && (
+                    <>
+                      <clipPath id="totePrintArea">
+                        <rect x="95" y="140" width="90" height="90" />
+                      </clipPath>
+                      <image
+                        href={previewUrl}
+                        x="95"
+                        y="140"
+                        width="90"
+                        height="90"
+                        preserveAspectRatio="xMidYMid slice"
+                        clipPath="url(#totePrintArea)"
+                      />
+                    </>
+                  )}
+                  {!previewUrl && (
+                    <rect
                       x="95"
                       y="140"
                       width="90"
                       height="90"
-                      preserveAspectRatio="xMidYMid slice"
-                      clipPath="url(#totePrintArea)"
+                      fill="none"
+                      stroke={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}
+                      strokeDasharray="4 4"
                     />
-                  </>
-                )}
-                {!previewUrl && (
-                  <rect
-                    x="95"
-                    y="140"
-                    width="90"
-                    height="90"
-                    fill="none"
-                    stroke={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}
-                    strokeDasharray="4 4"
-                  />
-                )}
-              </svg>
+                  )}
+                </svg>
+              )}
             </div>
 
             {error && <p className="text-sm text-red-400">{error}</p>}
