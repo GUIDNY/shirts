@@ -83,11 +83,11 @@ export default function HomePage() {
       <section className="relative w-full h-[78vh] md:h-[88vh] min-h-[520px] flex items-center overflow-hidden bg-[#0a0a0f]">
         <div className="absolute inset-0">
           <Image
-            src="/studio/model-women.jpg"
+            src="/studio/hero-gift.jpg"
             alt=""
             fill
             priority
-            className="object-cover object-top opacity-90"
+            className="object-cover opacity-90"
             sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/55 to-transparent md:hidden" />
