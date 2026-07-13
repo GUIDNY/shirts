@@ -47,10 +47,13 @@ interface SideDesign {
 
 const EMPTY_SIDE: SideDesign = { file: null, url: null, transform: null, baseScale: null };
 
+type Mode = "choice" | "quick" | "studio";
+
 export default function DesignPage() {
   const router = useRouter();
   const { setItem } = useCart();
 
+  const [mode, setMode] = useState<Mode>("choice");
   const [productType, setProductType] = useState<ProductType>("men");
   const [color, setColor] = useState<ShirtColor>("white");
   const [size, setSize] = useState<Size>("M");
@@ -232,16 +235,76 @@ export default function DesignPage() {
 
   const uploadLabel = side === "front" ? "העלאת עיצוב לחזית" : "העלאת עיצוב לגב";
 
+  if (mode === "choice") {
+    return (
+      <div className="bg-[#0a0a0f] min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
+        <div className="max-w-2xl w-full text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">איך תרצו לעצב?</h1>
+          <p className="text-neutral-400 mb-10">אפשר להתחיל מהר, ותמיד אפשר לעבור לעורך המתקדם באמצע.</p>
+          <div className="grid sm:grid-cols-2 gap-5">
+            <button
+              type="button"
+              onClick={() => setMode("quick")}
+              className="text-right rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-violet-500/50 hover:bg-white/[0.06] transition-colors"
+            >
+              <div className="h-11 w-11 rounded-full brand-gradient-bg flex items-center justify-center mb-4">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 4v16M4 12h16" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-white mb-1">העלאה מהירה</h2>
+              <p className="text-sm text-neutral-400">
+                מעלים לוגו או תמונה אחת, אנחנו ממרכזים אותה בגודל מקסימלי — וזהו.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("studio")}
+              className="text-right rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-violet-500/50 hover:bg-white/[0.06] transition-colors"
+            >
+              <div className="h-11 w-11 rounded-full brand-gradient-bg flex items-center justify-center mb-4">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 20l1-4L16 5l3 3L8 19l-4 1Z"
+                    stroke="white"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-white mb-1">עורך מתקדם</h2>
+              <p className="text-sm text-neutral-400">קובעים בעצמכם מיקום, גודל וסיבוב, ומוסיפים הדפסה גם לגב.</p>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#0a0a0f] min-h-[calc(100vh-64px)]">
       <div className="flex flex-col lg:flex-row">
-        <ToolRail uploadLabel={uploadLabel} onFileChange={handleFileChange} />
+        {mode === "studio" && <ToolRail uploadLabel={uploadLabel} onFileChange={handleFileChange} />}
 
         {/* center: view tabs + canvas */}
         <div className="flex-1 flex flex-col min-w-0">
           <div className="h-14 border-b border-white/10 flex items-center justify-between px-4 lg:px-6 shrink-0">
-            <span className="text-sm text-neutral-500 hidden sm:block">עיצוב חדש</span>
-            <div className="flex gap-1 rounded-lg bg-white/5 border border-white/10 p-1 mx-auto sm:mx-0" role="tablist" aria-label="תצוגה">
+            {mode === "quick" ? (
+              <>
+                <span className="text-sm text-neutral-500">העלאה מהירה · לוגו מרכזי</span>
+                <button
+                  type="button"
+                  onClick={() => setMode("studio")}
+                  className="text-sm font-medium text-violet-300 hover:text-violet-200 transition-colors"
+                >
+                  מעבר לעורך מתקדם ←
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-neutral-500 hidden sm:block">עיצוב חדש</span>
+                <div className="flex gap-1 rounded-lg bg-white/5 border border-white/10 p-1 mx-auto sm:mx-0" role="tablist" aria-label="תצוגה">
               <button
                 type="button"
                 role="tab"
@@ -285,8 +348,10 @@ export default function DesignPage() {
               >
                 על דוגמן
               </button>
-            </div>
-            <span className="hidden sm:block w-16" aria-hidden="true" />
+                </div>
+                <span className="hidden sm:block w-16" aria-hidden="true" />
+              </>
+            )}
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 py-8 md:py-12">
@@ -324,7 +389,7 @@ export default function DesignPage() {
               )}
             </div>
 
-            {view === "flat" && (
+            {view === "flat" && mode === "studio" && (
               <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg px-1.5 py-1">
                 <button
                   type="button"
@@ -353,7 +418,9 @@ export default function DesignPage() {
             ) : active.url ? (
               <div className="flex flex-col items-center gap-2">
                 <p className="text-sm text-neutral-500 text-center">
-                  גררו את התמונה כדי להזיז, ומהפינות כדי להגדיל, להקטין או לסובב
+                  {mode === "quick"
+                    ? "העיצוב ממורכז אוטומטית בגודל מקסימלי"
+                    : "גררו את התמונה כדי להזיז, ומהפינות כדי להגדיל, להקטין או לסובב"}
                 </p>
                 <label className="text-sm font-medium text-neutral-300 underline cursor-pointer">
                   החלף תמונה
@@ -361,7 +428,11 @@ export default function DesignPage() {
                 </label>
               </div>
             ) : (
-              <label className="lg:hidden w-full max-w-[360px] flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm">
+              <label
+                className={`${
+                  mode === "quick" ? "" : "lg:hidden"
+                } w-full max-w-[360px] flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm`}
+              >
                 <span>{uploadLabel}</span>
                 <span className="text-xs">PNG/JPG, עד 20MB</span>
                 <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
@@ -461,7 +532,7 @@ export default function DesignPage() {
             <p className="text-xs text-neutral-500 mt-2">2+ יחידות: 10% הנחה · 5+ יחידות: 20% הנחה</p>
           </div>
 
-          {view === "flat" && active.url && active.transform && active.baseScale && (
+          {mode === "studio" && view === "flat" && active.url && active.transform && active.baseScale && (
             <div className="border-t border-white/10 pt-6 flex flex-col gap-5">
               <div>
                 <h2 className="font-semibold text-white mb-2">גודל ומיקום מהיר</h2>
@@ -492,39 +563,41 @@ export default function DesignPage() {
             </div>
           )}
 
-          <div className="border-t border-white/10 pt-6">
-            <h2 className="font-semibold text-white mb-3">שכבות</h2>
-            <div className="flex flex-col gap-2">
-              {(["front", "back"] as PrintSide[]).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => {
-                    setView("flat");
-                    setSide(s);
-                  }}
-                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                    side === s && view === "flat"
-                      ? "border-violet-500/50 bg-violet-500/10"
-                      : "border-white/10 hover:bg-white/5"
-                  }`}
-                >
-                  <span className="h-8 w-8 rounded bg-white/5 overflow-hidden shrink-0 flex items-center justify-center">
-                    {designs[s].url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={designs[s].url as string} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-neutral-600 text-xs">—</span>
-                    )}
-                  </span>
-                  <span className="text-neutral-300">{s === "front" ? "חזית" : "גב"}</span>
-                  <span className="mr-auto text-xs text-neutral-500">
-                    {designs[s].url ? "✓ הועלה" : "לא הועלה"}
-                  </span>
-                </button>
-              ))}
+          {mode === "studio" && (
+            <div className="border-t border-white/10 pt-6">
+              <h2 className="font-semibold text-white mb-3">שכבות</h2>
+              <div className="flex flex-col gap-2">
+                {(["front", "back"] as PrintSide[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setView("flat");
+                      setSide(s);
+                    }}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      side === s && view === "flat"
+                        ? "border-violet-500/50 bg-violet-500/10"
+                        : "border-white/10 hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="h-8 w-8 rounded bg-white/5 overflow-hidden shrink-0 flex items-center justify-center">
+                      {designs[s].url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={designs[s].url as string} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-neutral-600 text-xs">—</span>
+                      )}
+                    </span>
+                    <span className="text-neutral-300">{s === "front" ? "חזית" : "גב"}</span>
+                    <span className="mr-auto text-xs text-neutral-500">
+                      {designs[s].url ? "✓ הועלה" : "לא הועלה"}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {designs.back.url && (
             <p className="text-sm text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-2">

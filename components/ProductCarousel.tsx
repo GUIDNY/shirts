@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -8,9 +8,48 @@ export interface CarouselItem {
   href: string;
   label: string;
   price: string;
-  src?: string;
+  /** One or more real photos; when there's more than one, the card image auto-rotates. */
+  images?: string[];
   alt?: string;
   visual?: ReactNode;
+}
+
+function CardImages({ images, alt }: { images: string[]; alt: string }) {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (images.length < 2) return;
+    const id = setInterval(() => setActive((i) => (i + 1) % images.length), 3200);
+    return () => clearInterval(id);
+  }, [images.length]);
+
+  return (
+    <>
+      {images.map((src, i) => (
+        <Image
+          key={src}
+          src={src}
+          alt={alt}
+          fill
+          className="object-cover group-hover:scale-105 transition-opacity duration-700"
+          style={{ opacity: i === active ? 1 : 0 }}
+          sizes="(max-width: 640px) 46vw, 280px"
+        />
+      ))}
+      {images.length > 1 && (
+        <div className="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 z-10">
+          {images.map((src, i) => (
+            <span
+              key={src}
+              className={`h-1.5 rounded-full transition-all ${
+                i === active ? "w-4 bg-white" : "w-1.5 bg-white/50"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
 }
 
 export default function ProductCarousel({ title, items }: { title: string; items: CarouselItem[] }) {
@@ -64,16 +103,10 @@ export default function ProductCarousel({ title, items }: { title: string; items
             className="shrink-0 w-[46%] sm:w-[260px] md:w-[280px] snap-start group bg-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300"
           >
             <div className="relative aspect-square bg-neutral-100 overflow-hidden">
-              {item.visual ? (
-                item.visual
+              {item.images && item.images.length > 0 ? (
+                <CardImages images={item.images} alt={item.alt ?? item.label} />
               ) : (
-                <Image
-                  src={item.src!}
-                  alt={item.alt!}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 640px) 46vw, 280px"
-                />
+                item.visual
               )}
             </div>
             <div className="p-5 text-center border-t border-neutral-100">

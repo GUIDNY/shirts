@@ -71,9 +71,27 @@ const MORE_PRODUCTS: CarouselItem[] = [
       </div>
     ),
   },
-  { href: "/design/tote", src: "/studio/tote-blank.jpg", alt: "טוט בג בעיצוב אישי", label: "טוט בג בעיצוב אישי", price: `מ-${TOTE_PRICE} ₪` },
-  { href: "/design/canvas", src: "/studio/canvas-blank.jpg", alt: "קנבס בעיצוב אישי", label: "קנבס בעיצוב אישי", price: `מ-${CANVAS_PRICE} ₪` },
-  { href: "/design/mug", src: "/studio/mug-blank.jpg", alt: "ספל בעיצוב אישי", label: "ספל בעיצוב אישי", price: `מ-${MUG_PRICE} ₪` },
+  {
+    href: "/design/tote",
+    images: ["/studio/tote-blank.jpg", "/studio/tote-blank-2.jpg"],
+    alt: "טוט בג בעיצוב אישי",
+    label: "טוט בג בעיצוב אישי",
+    price: `מ-${TOTE_PRICE} ₪`,
+  },
+  {
+    href: "/design/canvas",
+    images: ["/studio/canvas-blank.jpg", "/studio/canvas-blank-2.jpg"],
+    alt: "קנבס בעיצוב אישי",
+    label: "קנבס בעיצוב אישי",
+    price: `מ-${CANVAS_PRICE} ₪`,
+  },
+  {
+    href: "/design/mug",
+    images: ["/studio/mug-blank.jpg", "/studio/mug-blank-2.jpg"],
+    alt: "ספל בעיצוב אישי",
+    label: "ספל בעיצוב אישי",
+    price: `מ-${MUG_PRICE} ₪`,
+  },
 ];
 
 export default function HomePage() {
