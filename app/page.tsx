@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import HeroRotator from "@/components/HeroRotator";
 import ProductCarousel, { type CarouselItem } from "@/components/ProductCarousel";
 import { CANVAS_PRICE, MUG_PRICE, POSTER_PRICE, TOTE_PRICE } from "@/lib/types";
 import { UNIT_PRICE } from "@/lib/pricing";
@@ -100,13 +101,12 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative w-full h-[78vh] md:h-[88vh] min-h-[520px] flex items-center overflow-hidden bg-[#0a0a0f]">
         <div className="absolute inset-0">
-          <Image
-            src="/studio/hero-gift.jpg"
-            alt=""
-            fill
-            priority
-            className="object-cover opacity-90"
-            sizes="100vw"
+          <HeroRotator
+            images={[
+              { src: "/studio/hero-gift.jpg" },
+              { src: "/studio/hero-friends.jpg" },
+              { src: "/studio/model-men.jpg", position: "top" },
+            ]}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/55 to-transparent md:hidden" />
           <div className="absolute inset-0 hidden md:block bg-gradient-to-l from-[#0a0a0f] via-[#0a0a0f]/50 to-transparent" />
