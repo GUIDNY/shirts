@@ -265,7 +265,7 @@ export default function DesignPage() {
               </div>
               <h2 className="text-lg font-semibold text-white mb-1">העלאה מהירה</h2>
               <p className="text-sm text-neutral-400">
-                ארבעה צעדים פשוטים: תמונה לחזית, תמונה לגב (לא חובה), גודל הדפסה וצבע — וזהו.
+                ארבעה צעדים פשוטים: צבע, תמונה לחזית, תמונה לגב (לא חובה) — עם אפשרות לצפות על דוגמן בדרך.
               </p>
             </button>
             <button
@@ -294,11 +294,11 @@ export default function DesignPage() {
   }
 
   if (mode === "quick") {
-    const STEP_LABELS = ["תמונה לחזית", "תמונה לגב", "גודל הדפסה", "צבע ופרטים"];
+    const STEP_LABELS = ["צבע", "חזית", "גב", "פרטים אחרונים"];
 
     function goToStep(n: 1 | 2 | 3 | 4) {
       setQuickStep(n);
-      setSide(n === 2 ? "back" : "front");
+      setSide(n === 3 ? "back" : "front");
       setView("flat");
     }
 
@@ -329,251 +329,282 @@ export default function DesignPage() {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 py-10 pb-32">
-          <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-4 md:p-6">
-            <div className={quickStep === 2 ? "hidden" : ""}>
-              <ShirtDesignerCanvas
-                ref={frontCanvasRef}
-                color={color}
-                side="front"
-                imageUrl={designs.front.url}
-                transform={designs.front.transform}
-                onTransformChange={(t) => updateSide("front", { transform: t })}
-              />
-            </div>
-            <div className={quickStep === 2 ? "" : "hidden"}>
-              <ShirtDesignerCanvas
-                ref={backCanvasRef}
-                color={color}
-                side="back"
-                imageUrl={designs.back.url}
-                transform={designs.back.transform}
-                onTransformChange={(t) => updateSide("back", { transform: t })}
-              />
-            </div>
-          </div>
-
-          {/* Step 1: front upload */}
-          {quickStep === 1 && (
-            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-              {designs.front.url ? (
-                <>
-                  <p className="text-sm text-neutral-500 text-center">התמונה לחזית הועלתה</p>
-                  <div className="flex items-center gap-4">
-                    <label className="text-sm font-medium text-neutral-300 underline cursor-pointer">
-                      החלף תמונה
-                      <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => goToStep(2)}
-                      className="h-11 px-6 rounded-md brand-gradient-bg text-white text-sm font-semibold hover:brightness-110 transition-all"
-                    >
-                      המשך →
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-lg font-semibold text-white">העלאת תמונה לחזית</h2>
-                  <label className="w-full flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm">
-                    <span>⬆️ העלאת תמונה</span>
-                    <span className="text-xs">PNG/JPG, עד 20MB</span>
-                    <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
-                  </label>
-                </>
-              )}
-            </div>
+          {designs.front.url && (
+            <button
+              type="button"
+              onClick={() => setView(view === "model" ? "flat" : "model")}
+              className="text-sm font-medium text-violet-300 hover:text-violet-200 underline transition-colors"
+            >
+              {view === "model" ? "← חזרה לעריכה" : "👕 צפייה על דוגמן"}
+            </button>
           )}
 
-          {/* Step 2: back upload (optional) */}
-          {quickStep === 2 && (
-            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-              <button
-                type="button"
-                onClick={() => goToStep(1)}
-                className="self-start text-sm text-neutral-500 hover:text-white transition-colors"
-              >
-                → חזרה לחזית
-              </button>
-              {designs.back.url ? (
-                <>
-                  <p className="text-sm text-neutral-500 text-center">התמונה לגב הועלתה</p>
-                  <div className="flex items-center gap-4">
-                    <label className="text-sm font-medium text-neutral-300 underline cursor-pointer">
-                      החלף תמונה
-                      <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => goToStep(3)}
-                      className="h-11 px-6 rounded-md brand-gradient-bg text-white text-sm font-semibold hover:brightness-110 transition-all"
-                    >
-                      המשך →
-                    </button>
+          {view === "model" ? (
+            <ModelPreview
+              productType={productType}
+              color={color}
+              imageUrl={designs.front.url}
+              transform={designs.front.transform}
+            />
+          ) : (
+            <>
+              <div className="rounded-2xl bg-[#141419] ring-1 ring-white/10 shadow-2xl p-4 md:p-6">
+                <div className={quickStep === 3 ? "hidden" : ""}>
+                  <ShirtDesignerCanvas
+                    ref={frontCanvasRef}
+                    color={color}
+                    side="front"
+                    imageUrl={designs.front.url}
+                    transform={designs.front.transform}
+                    onTransformChange={(t) => updateSide("front", { transform: t })}
+                  />
+                </div>
+                <div className={quickStep === 3 ? "" : "hidden"}>
+                  <ShirtDesignerCanvas
+                    ref={backCanvasRef}
+                    color={color}
+                    side="back"
+                    imageUrl={designs.back.url}
+                    transform={designs.back.transform}
+                    onTransformChange={(t) => updateSide("back", { transform: t })}
+                  />
+                </div>
+              </div>
+
+              {/* Step 1: color */}
+              {quickStep === 1 && (
+                <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+                  <h2 className="text-lg font-semibold text-white">
+                    בחרו צבע <span className="font-normal text-neutral-500">· {COLOR_LABELS[color]}</span>
+                  </h2>
+                  <div className="flex gap-3 flex-wrap justify-center">
+                    {ALL_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setColor(c)}
+                        aria-label={COLOR_LABELS[c]}
+                        aria-pressed={color === c}
+                        style={{ backgroundColor: c === "white" ? "#f0f0f0" : COLOR_HEX[c] }}
+                        className={`h-11 w-11 rounded-full border-2 transition-all ${
+                          color === c ? "border-white scale-110 shadow-[0_0_0_3px_rgba(139,92,246,0.5)]" : "border-white/15"
+                        }`}
+                      />
+                    ))}
                   </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-lg font-semibold text-white">העלאת תמונה לגב (לא חובה)</h2>
-                  <label className="w-full flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm">
-                    <span>⬆️ העלאת תמונה</span>
-                    <span className="text-xs">PNG/JPG, עד 20MB</span>
-                    <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => goToStep(2)}
+                    className="h-11 px-6 rounded-md brand-gradient-bg text-white text-sm font-semibold hover:brightness-110 transition-all"
+                  >
+                    המשך →
+                  </button>
+                </div>
+              )}
+
+              {/* Step 2: front upload, then inline print-size choice */}
+              {quickStep === 2 && (
+                <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(1)}
+                    className="self-start text-sm text-neutral-500 hover:text-white transition-colors"
+                  >
+                    → חזרה לצבע
+                  </button>
+                  {!designs.front.url ? (
+                    <>
+                      <h2 className="text-lg font-semibold text-white">העלאת תמונה לחזית</h2>
+                      <label className="w-full flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm">
+                        <span>⬆️ העלאת תמונה</span>
+                        <span className="text-xs">PNG/JPG, עד 20MB</span>
+                        <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-neutral-500 text-center">התמונה לחזית הועלתה</p>
+                      <label className="text-sm font-medium text-neutral-300 underline cursor-pointer">
+                        החלף תמונה
+                        <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
+                      </label>
+                      <div className="w-full">
+                        <h3 className="text-sm font-medium text-neutral-300 mb-2 text-center">בחרו גודל הדפסה</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyPresetTo("front", "large");
+                              goToStep(3);
+                            }}
+                            className="h-20 rounded-xl border border-white/15 text-neutral-200 text-sm font-medium hover:border-violet-500/50 hover:bg-white/5 transition-colors flex flex-col items-center justify-center gap-1"
+                          >
+                            <span className="text-xl">🖼️</span>
+                            תמונה גדולה
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyPresetTo("front", "small");
+                              goToStep(3);
+                            }}
+                            className="h-20 rounded-xl border border-white/15 text-neutral-200 text-sm font-medium hover:border-violet-500/50 hover:bg-white/5 transition-colors flex flex-col items-center justify-center gap-1"
+                          >
+                            <span className="text-xl">🔘</span>
+                            לוגו קטן
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: back upload (optional), then inline print-size choice */}
+              {quickStep === 3 && (
+                <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(2)}
+                    className="self-start text-sm text-neutral-500 hover:text-white transition-colors"
+                  >
+                    → חזרה לחזית
+                  </button>
+                  {!designs.back.url ? (
+                    <>
+                      <h2 className="text-lg font-semibold text-white">העלאת תמונה לגב (לא חובה)</h2>
+                      <label className="w-full flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-white/15 cursor-pointer hover:border-white/30 transition-colors text-neutral-400 text-sm">
+                        <span>⬆️ העלאת תמונה</span>
+                        <span className="text-xs">PNG/JPG, עד 20MB</span>
+                        <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(4)}
+                        className="text-sm font-medium text-neutral-400 hover:text-white underline transition-colors"
+                      >
+                        דלג — בלי הדפסה על הגב
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-neutral-500 text-center">התמונה לגב הועלתה</p>
+                      <label className="text-sm font-medium text-neutral-300 underline cursor-pointer">
+                        החלף תמונה
+                        <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
+                      </label>
+                      <div className="w-full">
+                        <h3 className="text-sm font-medium text-neutral-300 mb-2 text-center">בחרו גודל הדפסה</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyPresetTo("back", "large");
+                              goToStep(4);
+                            }}
+                            className="h-20 rounded-xl border border-white/15 text-neutral-200 text-sm font-medium hover:border-violet-500/50 hover:bg-white/5 transition-colors flex flex-col items-center justify-center gap-1"
+                          >
+                            <span className="text-xl">🖼️</span>
+                            תמונה גדולה
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyPresetTo("back", "small");
+                              goToStep(4);
+                            }}
+                            className="h-20 rounded-xl border border-white/15 text-neutral-200 text-sm font-medium hover:border-violet-500/50 hover:bg-white/5 transition-colors flex flex-col items-center justify-center gap-1"
+                          >
+                            <span className="text-xl">🔘</span>
+                            לוגו קטן
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Step 4: product type, size, quantity */}
+              {quickStep === 4 && (
+                <div className="flex flex-col items-center gap-6 w-full max-w-sm">
                   <button
                     type="button"
                     onClick={() => goToStep(3)}
-                    className="text-sm font-medium text-neutral-400 hover:text-white underline transition-colors"
+                    className="self-start text-sm text-neutral-500 hover:text-white transition-colors"
                   >
-                    דלג — בלי הדפסה על הגב
+                    → חזרה
                   </button>
-                </>
+
+                  <div className="w-full">
+                    <h2 className="font-semibold text-white mb-2">סוג מוצר</h2>
+                    <div className="grid grid-cols-3 gap-2">
+                      {PRODUCT_TYPES.map((pt) => (
+                        <button
+                          key={pt}
+                          type="button"
+                          onClick={() => {
+                            setProductType(pt);
+                            if (pt === "kids" && size === "XXL") setSize("XL");
+                          }}
+                          className={`h-11 rounded-md border text-sm font-medium transition-colors ${
+                            productType === pt
+                              ? "brand-gradient-bg border-transparent text-white"
+                              : "border-white/15 text-neutral-300 hover:bg-white/5"
+                          }`}
+                        >
+                          {PRODUCT_LABELS[pt]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="w-full">
+                    <h2 className="font-semibold text-white mb-2">מידה</h2>
+                    <div className="flex gap-2 flex-wrap">
+                      {SIZES.filter((s) => !(productType === "kids" && s === "XXL")).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSize(s)}
+                          className={`h-11 w-14 rounded-md border text-sm font-medium transition-colors ${
+                            size === s
+                              ? "brand-gradient-bg border-transparent text-white"
+                              : "border-white/15 text-neutral-300 hover:bg-white/5"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="w-full">
+                    <h2 className="font-semibold text-white mb-2">כמות</h2>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="h-11 w-11 rounded-md border border-white/15 text-white text-lg hover:bg-white/5"
+                        aria-label="הפחת כמות"
+                      >
+                        −
+                      </button>
+                      <span className="w-8 text-center font-medium text-white">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => q + 1)}
+                        className="h-11 w-11 rounded-md border border-white/15 text-white text-lg hover:bg-white/5"
+                        aria-label="הוסף כמות"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-2">2+ יחידות: 10% הנחה · 5+ יחידות: 20% הנחה</p>
+                  </div>
+                </div>
               )}
-            </div>
-          )}
-
-          {/* Step 3: print size */}
-          {quickStep === 3 && (
-            <div className="flex flex-col items-center gap-4 w-full max-w-sm">
-              <button
-                type="button"
-                onClick={() => goToStep(2)}
-                className="self-start text-sm text-neutral-500 hover:text-white transition-colors"
-              >
-                → חזרה
-              </button>
-              <h2 className="text-lg font-semibold text-white">בחרו גודל הדפסה</h2>
-              {designs.back.url && (
-                <p className="text-xs text-neutral-500 text-center">הבחירה תיושם גם על הגב</p>
-              )}
-              <div className="grid grid-cols-2 gap-3 w-full">
-                <button
-                  type="button"
-                  onClick={() => {
-                    applyPresetTo("front", "large");
-                    if (designs.back.url) applyPresetTo("back", "large");
-                    goToStep(4);
-                  }}
-                  className="h-24 rounded-xl border border-white/15 text-neutral-200 text-sm font-medium hover:border-violet-500/50 hover:bg-white/5 transition-colors flex flex-col items-center justify-center gap-1"
-                >
-                  <span className="text-2xl">🖼️</span>
-                  תמונה גדולה במרכז
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    applyPresetTo("front", "small");
-                    if (designs.back.url) applyPresetTo("back", "small");
-                    goToStep(4);
-                  }}
-                  className="h-24 rounded-xl border border-white/15 text-neutral-200 text-sm font-medium hover:border-violet-500/50 hover:bg-white/5 transition-colors flex flex-col items-center justify-center gap-1"
-                >
-                  <span className="text-2xl">🔘</span>
-                  לוגו קטן
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: color, product type, size, quantity */}
-          {quickStep === 4 && (
-            <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-              <button
-                type="button"
-                onClick={() => goToStep(3)}
-                className="self-start text-sm text-neutral-500 hover:text-white transition-colors"
-              >
-                → חזרה
-              </button>
-
-              <div className="w-full">
-                <h2 className="font-semibold text-white mb-2">סוג מוצר</h2>
-                <div className="grid grid-cols-3 gap-2">
-                  {PRODUCT_TYPES.map((pt) => (
-                    <button
-                      key={pt}
-                      type="button"
-                      onClick={() => {
-                        setProductType(pt);
-                        if (pt === "kids" && size === "XXL") setSize("XL");
-                      }}
-                      className={`h-11 rounded-md border text-sm font-medium transition-colors ${
-                        productType === pt
-                          ? "brand-gradient-bg border-transparent text-white"
-                          : "border-white/15 text-neutral-300 hover:bg-white/5"
-                      }`}
-                    >
-                      {PRODUCT_LABELS[pt]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="w-full">
-                <h2 className="font-semibold text-white mb-2">
-                  צבע <span className="font-normal text-neutral-500">· {COLOR_LABELS[color]}</span>
-                </h2>
-                <div className="flex gap-3 flex-wrap">
-                  {ALL_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setColor(c)}
-                      aria-label={COLOR_LABELS[c]}
-                      aria-pressed={color === c}
-                      style={{ backgroundColor: c === "white" ? "#f0f0f0" : COLOR_HEX[c] }}
-                      className={`h-11 w-11 rounded-full border-2 transition-all ${
-                        color === c ? "border-white scale-110 shadow-[0_0_0_3px_rgba(139,92,246,0.5)]" : "border-white/15"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="w-full">
-                <h2 className="font-semibold text-white mb-2">מידה</h2>
-                <div className="flex gap-2 flex-wrap">
-                  {SIZES.filter((s) => !(productType === "kids" && s === "XXL")).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSize(s)}
-                      className={`h-11 w-14 rounded-md border text-sm font-medium transition-colors ${
-                        size === s
-                          ? "brand-gradient-bg border-transparent text-white"
-                          : "border-white/15 text-neutral-300 hover:bg-white/5"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="w-full">
-                <h2 className="font-semibold text-white mb-2">כמות</h2>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-11 w-11 rounded-md border border-white/15 text-white text-lg hover:bg-white/5"
-                    aria-label="הפחת כמות"
-                  >
-                    −
-                  </button>
-                  <span className="w-8 text-center font-medium text-white">{quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="h-11 w-11 rounded-md border border-white/15 text-white text-lg hover:bg-white/5"
-                    aria-label="הוסף כמות"
-                  >
-                    +
-                  </button>
-                </div>
-                <p className="text-xs text-neutral-500 mt-2">2+ יחידות: 10% הנחה · 5+ יחידות: 20% הנחה</p>
-              </div>
-            </div>
+            </>
           )}
 
           {error && (
