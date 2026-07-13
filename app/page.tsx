@@ -104,6 +104,7 @@ export default function HomePage() {
           <HeroRotator
             images={[
               { src: "/studio/hero-gift.jpg" },
+              { src: "/studio/hero-store.jpg" },
               { src: "/studio/hero-friends.jpg" },
               { src: "/studio/model-men.jpg", position: "top" },
             ]}
