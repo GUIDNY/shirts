@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 import { useCart } from "@/components/CartProvider";
@@ -243,8 +244,15 @@ export default function DesignPage() {
 
   if (mode === "choice") {
     return (
-      <div className="bg-[#0a0a0f] min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
-        <div className="max-w-2xl w-full text-center">
+      <div className="relative bg-[#0a0a0f] min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16 overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-70"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 0%, rgba(139,92,246,0.12) 0%, transparent 55%), radial-gradient(circle at 100% 100%, rgba(59,130,246,0.08) 0%, transparent 50%)",
+          }}
+        />
+        <div className="relative max-w-2xl w-full text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">איך תרצו לעצב?</h1>
           <p className="text-neutral-400 mb-10">אפשר להתחיל מהר, ותמיד אפשר לעבור לעורך המתקדם באמצע.</p>
           <div className="grid sm:grid-cols-2 gap-5">
@@ -256,25 +264,29 @@ export default function DesignPage() {
                 setSide("front");
                 setView("flat");
               }}
-              className="text-right rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-violet-500/50 hover:bg-white/[0.06] transition-colors"
+              className="group relative text-right rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-8 transition-all duration-300 hover:border-violet-400/40 hover:bg-white/[0.06] hover:shadow-[0_0_24px_rgba(139,92,246,0.15)]"
             >
-              <div className="h-11 w-11 rounded-full brand-gradient-bg flex items-center justify-center mb-4">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <div className="h-16 w-16 rounded-full brand-gradient-bg flex items-center justify-center mb-5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M12 4v16M4 12h16" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-white mb-1">העלאה מהירה</h2>
+              <h2 className="text-lg font-semibold text-white mb-2">העלאה מהירה</h2>
               <p className="text-sm text-neutral-400">
                 ארבעה צעדים פשוטים: צבע, תמונה לחזית, תמונה לגב (לא חובה) — עם אפשרות לצפות על דוגמן בדרך.
               </p>
+              <div className="mt-6 flex items-center gap-1.5 text-violet-300 text-sm font-medium opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                <span>התחל כאן</span>
+                <span aria-hidden="true">←</span>
+              </div>
             </button>
             <button
               type="button"
               onClick={() => setMode("studio")}
-              className="text-right rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-violet-500/50 hover:bg-white/[0.06] transition-colors"
+              className="group relative text-right rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-8 transition-all duration-300 hover:border-blue-400/40 hover:bg-white/[0.06] hover:shadow-[0_0_24px_rgba(59,130,246,0.15)]"
             >
-              <div className="h-11 w-11 rounded-full brand-gradient-bg flex items-center justify-center mb-4">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <div className="h-16 w-16 rounded-full brand-gradient-bg flex items-center justify-center mb-5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M4 20l1-4L16 5l3 3L8 19l-4 1Z"
                     stroke="white"
@@ -284,10 +296,21 @@ export default function DesignPage() {
                   />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-white mb-1">עורך מתקדם</h2>
+              <h2 className="text-lg font-semibold text-white mb-2">עורך מתקדם</h2>
               <p className="text-sm text-neutral-400">קובעים בעצמכם מיקום, גודל וסיבוב, ומוסיפים הדפסה גם לגב.</p>
+              <div className="mt-6 flex items-center gap-1.5 text-blue-300 text-sm font-medium opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                <span>פתיחת העורך</span>
+                <span aria-hidden="true">←</span>
+              </div>
             </button>
           </div>
+
+          <Link
+            href="/contact"
+            className="mt-10 inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-300 border-b border-white/10 hover:border-white/30 pb-0.5 transition-colors"
+          >
+            צריכים עזרה בבחירה?
+          </Link>
         </div>
       </div>
     );
